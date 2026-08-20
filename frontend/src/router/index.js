@@ -1,14 +1,35 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../pages/Login.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import { useAuth } from '../stores/auth'
 
-export default createRouter({
+const router = createRouter({
  history: createWebHistory(),
  routes: [
-  { path: '/', redirect: '/login' },
-  { path: '/login', component: Login },
-  { path: '/dashboard', component: Dashboard }
+  {
+   path: '/',
+   beforeEnter: () => {
+    const auth = useAuth()
+    return auth.checkSession() ? '/dashboard' : '/login'
+   }
+  },
+  {
+   path: '/login',
+   component: Login,
+   beforeEnter: () => {
+    const auth = useAuth()
+    return auth.checkSession() ? '/dashboard' : true
+   }
+  },
+  {
+   path: '/dashboard',
+   component: Dashboard,
+   beforeEnter: () => {
+    const auth = useAuth()
+    return auth.checkSession() ? true : '/login'
+   }
+  }
  ]
 })
 
-// Authentication guard foundation added in v1.3.0
+export default router
