@@ -1,6 +1,6 @@
 <template>
   <div class="login-page">
-    <form class="login-card" @submit.prevent="handleLogin">
+    <form class="card login-card" @submit.prevent="handleLogin">
       <BrandLogo />
 
       <div class="form-group">
