@@ -10,3 +10,5 @@ export default createRouter({
   { path: '/dashboard', component: Dashboard }
  ]
 })
+
+// Authentication guard foundation added in v1.3.0
