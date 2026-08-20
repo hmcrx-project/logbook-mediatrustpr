@@ -1,0 +1,1 @@
+v1.1.13 Inline SVG Revision: logo embedded, external logo dependency removed.

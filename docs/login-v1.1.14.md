@@ -1,0 +1,1 @@
+v1.1.14: inline logo size 230px centered and dynamic copyright year.

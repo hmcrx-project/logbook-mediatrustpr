@@ -1,0 +1,1 @@
+Login v1.1.10 - card width revision and stronger borders.
