@@ -80,3 +80,7 @@ export function useAuth() {
     updateActivity
   }
 }
+
+
+// v1.3.2 auth initialization state
+export const authReady = true
