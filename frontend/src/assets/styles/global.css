@@ -89,3 +89,6 @@ a:hover {
   width: 100%;
   min-height: 280px;
 }
+
+
+.btn-full { width: 100%; }

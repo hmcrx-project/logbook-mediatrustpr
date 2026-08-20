@@ -2,8 +2,10 @@
   <input
     class="form-input"
     :class="{ 'is-error': error }"
+    :type="type"
     :value="modelValue"
     :placeholder="placeholder"
+    :disabled="disabled"
     @input="$emit('update:modelValue', $event.target.value)"
   />
 </template>
@@ -12,7 +14,12 @@
 defineProps({
   modelValue: String,
   placeholder: String,
-  error: Boolean
+  type: {
+    type: String,
+    default: 'text'
+  },
+  error: Boolean,
+  disabled: Boolean
 })
 
 defineEmits(['update:modelValue'])
