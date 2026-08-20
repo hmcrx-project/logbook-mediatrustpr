@@ -31,29 +31,48 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BrandLogo from '../components/BrandLogo.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'
-import { login } from '../services/auth'
+import { login as validateLogin } from '../services/auth'
+import { useAuthStore } from '../stores/auth'
 
 const username = ref('')
 const password = ref('')
 const error = ref('')
 const showPassword = ref(false)
 const currentYear = new Date().getFullYear()
+const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
-function handleLogin() {
-  const result = login(username.value, password.value)
+function getRedirectTarget() {
+  const redirect = route.query.redirect
+
+  if (
+    typeof redirect === 'string' &&
+    redirect.startsWith('/') &&
+    !redirect.startsWith('//') &&
+    redirect !== '/login'
+  ) {
+    return redirect
+  }
+
+  return '/dashboard'
+}
+
+async function handleLogin() {
+  const result = validateLogin(username.value, password.value)
 
   if (!result.success) {
     error.value = result.message
     return
   }
 
+  auth.login(result.user)
   error.value = ''
-  router.push('/dashboard')
+  await router.replace(getRedirectTarget())
 }
 </script>
 

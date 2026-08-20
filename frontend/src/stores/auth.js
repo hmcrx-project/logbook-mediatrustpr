@@ -1,86 +1,100 @@
-
-import { ref } from 'vue'
+import { defineStore } from 'pinia'
 
 const SESSION_KEY = 'mediatrust_session'
 const IDLE_TIMEOUT = 4 * 60 * 60 * 1000
 const MAX_SESSION = 24 * 60 * 60 * 1000
 
-const user = ref(null)
-
-function saveSession(data) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(data))
-}
-
-function getSession() {
+function readSession() {
   const raw = localStorage.getItem(SESSION_KEY)
   if (!raw) return null
 
   try {
     return JSON.parse(raw)
   } catch {
+    localStorage.removeItem(SESSION_KEY)
     return null
   }
 }
 
-function checkSession() {
-  const session = getSession()
+function isValidSessionShape(session) {
+  return Boolean(
+    session &&
+    session.user &&
+    typeof session.user.username === 'string' &&
+    Number.isFinite(session.loginAt) &&
+    Number.isFinite(session.lastActivity)
+  )
+}
 
-  if (!session) {
-    user.value = null
-    return false
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null
+  }),
+
+  getters: {
+    isAuthenticated: (state) => Boolean(state.user)
+  },
+
+  actions: {
+    login(user) {
+      const now = Date.now()
+      const session = {
+        user,
+        loginAt: now,
+        lastActivity: now
+      }
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+      this.user = user
+    },
+
+    logout() {
+      localStorage.removeItem(SESSION_KEY)
+      this.user = null
+    },
+
+    checkSession() {
+      const session = readSession()
+
+      if (!isValidSessionShape(session)) {
+        this.logout()
+        return false
+      }
+
+      const now = Date.now()
+      const idleExpired = now - session.lastActivity >= IDLE_TIMEOUT
+      const maxExpired = now - session.loginAt >= MAX_SESSION
+
+      if (idleExpired || maxExpired) {
+        this.logout()
+        return false
+      }
+
+      this.user = session.user
+      return true
+    },
+
+    updateActivity() {
+      const session = readSession()
+
+      if (!isValidSessionShape(session)) {
+        this.logout()
+        return false
+      }
+
+      const now = Date.now()
+      const idleExpired = now - session.lastActivity >= IDLE_TIMEOUT
+      const maxExpired = now - session.loginAt >= MAX_SESSION
+
+      if (idleExpired || maxExpired) {
+        this.logout()
+        return false
+      }
+
+      session.lastActivity = now
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+      this.user = session.user
+      return true
+    }
   }
-
-  const now = Date.now()
-
-  if (
-    now - session.lastActivity > IDLE_TIMEOUT ||
-    now - session.loginAt > MAX_SESSION
-  ) {
-    logout()
-    return false
-  }
-
-  user.value = session.user
-  updateActivity()
-  return true
-}
-
-function updateActivity() {
-  const session = getSession()
-  if (!session) return
-
-  session.lastActivity = Date.now()
-  saveSession(session)
-}
-
-function login(username) {
-  const session = {
-    user: { username },
-    loginAt: Date.now(),
-    lastActivity: Date.now()
-  }
-
-  saveSession(session)
-  user.value = session.user
-
-  return true
-}
-
-function logout() {
-  localStorage.removeItem(SESSION_KEY)
-  user.value = null
-}
-
-export function useAuth() {
-  return {
-    user,
-    login,
-    logout,
-    checkSession,
-    updateActivity
-  }
-}
-
-
-// v1.3.2 auth initialization state
-export const authReady = true
+})
