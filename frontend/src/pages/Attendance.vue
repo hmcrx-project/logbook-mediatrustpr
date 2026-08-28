@@ -55,7 +55,7 @@
         <span>{{ filteredEmployees.length }} karyawan</span>
       </div>
 
-      <div class="attendance-table-scroll">
+      <div class="attendance-table-scroll" @wheel="handleTableWheel">
         <table class="attendance-table">
           <thead>
             <tr>
@@ -171,6 +171,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import * as XLSX from 'xlsx'
 import BaseButton from '../components/BaseButton.vue'
 
 const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
@@ -198,7 +199,7 @@ const months = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ].map((label, index) => ({ label, value: index + 1 }))
 
-const years = Array.from({ length: 5 }, (_, index) => currentYear - 2 + index)
+const years = Array.from({ length: 16 }, (_, index) => currentYear - 10 + index)
 const positions = [...new Set(employees.map((employee) => employee.position))]
 
 const draftFilters = reactive({
@@ -384,38 +385,47 @@ function closeDetail() {
   editError.value = ''
 }
 
+function handleTableWheel(event) {
+  const container = event.currentTarget
+  if (!container || container.scrollWidth <= container.clientWidth) return
+
+  const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+  if (!delta) return
+
+  const maxScrollLeft = container.scrollWidth - container.clientWidth
+  const nextScrollLeft = Math.min(maxScrollLeft, Math.max(0, container.scrollLeft + delta))
+
+  if (nextScrollLeft !== container.scrollLeft) {
+    event.preventDefault()
+    container.scrollLeft = nextScrollLeft
+  }
+}
+
 function exportToExcel() {
-  const escapeHtml = (value) => String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+  const rows = [
+    ['Nama Karyawan', ...daysInMonth.value],
+    ...filteredEmployees.value.map((employee) => [
+      employee.name,
+      ...daysInMonth.value.map((day) => {
+        const attendance = getAttendance(employee, day)
+        return attendance ? formatDuration(attendance.durationMinutes) : '-'
+      })
+    ])
+  ]
 
-  const headerCells = ['Nama Karyawan', ...daysInMonth.value]
-    .map((value) => `<th>${escapeHtml(value)}</th>`)
-    .join('')
+  const worksheet = XLSX.utils.aoa_to_sheet(rows)
+  worksheet['!cols'] = [
+    { wch: 24 },
+    ...daysInMonth.value.map(() => ({ wch: 9 }))
+  ]
 
-  const bodyRows = filteredEmployees.value.map((employee) => {
-    const dayCells = daysInMonth.value.map((day) => {
-      const attendance = getAttendance(employee, day)
-      return `<td>${escapeHtml(attendance ? formatDuration(attendance.durationMinutes) : '-')}</td>`
-    }).join('')
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Absensi')
 
-    return `<tr><td>${escapeHtml(employee.name)}</td>${dayCells}</tr>`
-  }).join('')
-
-  const workbook = `﻿<html><head><meta charset="UTF-8"></head><body><table border="1"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`
-  const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
   const monthSlug = activeMonthLabel.value.toLowerCase()
-
-  anchor.href = url
-  anchor.download = `absensi-${monthSlug}-${activeFilters.year}.xls`
-  document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(url)
+  XLSX.writeFile(workbook, `absensi-${monthSlug}-${activeFilters.year}.xlsx`, {
+    compression: true
+  })
 }
 </script>
 
