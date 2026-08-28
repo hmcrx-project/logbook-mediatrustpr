@@ -110,22 +110,59 @@
             <span>Tanggal</span>
             <strong>{{ detailDateLabel }}</strong>
           </div>
-          <div class="detail-row">
-            <span>Absen Masuk</span>
-            <strong>{{ selectedDetail.attendance.checkIn }} WIB</strong>
-          </div>
-          <div class="detail-row">
-            <span>Absen Pulang</span>
-            <strong>{{ selectedDetail.attendance.checkOut }} WIB</strong>
-          </div>
-          <div class="detail-row total-row">
-            <span>Total Jam Kerja</span>
-            <strong>{{ formatDuration(selectedDetail.attendance.durationMinutes) }}</strong>
-          </div>
+
+          <template v-if="!isEditingDetail">
+            <div class="detail-row">
+              <span>Absen Masuk</span>
+              <strong>{{ selectedDetail.attendance.checkIn }} WIB</strong>
+            </div>
+            <div class="detail-row">
+              <span>Absen Pulang</span>
+              <strong>{{ selectedDetail.attendance.checkOut }} WIB</strong>
+            </div>
+            <div class="detail-row">
+              <span>Lokasi Kerja</span>
+              <strong>{{ selectedDetail.attendance.workLocation }}</strong>
+            </div>
+            <div class="detail-row total-row">
+              <span>Total Jam Kerja</span>
+              <strong>{{ formatDuration(selectedDetail.attendance.durationMinutes) }}</strong>
+            </div>
+          </template>
+
+          <template v-else>
+            <label class="detail-edit-field">
+              <span>Absen Masuk</span>
+              <input v-model="editForm.checkIn" type="time" class="form-input" />
+            </label>
+            <label class="detail-edit-field">
+              <span>Absen Pulang</span>
+              <input v-model="editForm.checkOut" type="time" class="form-input" />
+            </label>
+            <label class="detail-edit-field">
+              <span>Lokasi Kerja</span>
+              <select v-model="editForm.workLocation" class="form-input">
+                <option value="WFO">WFO</option>
+                <option value="WFH">WFH</option>
+              </select>
+            </label>
+            <div class="detail-row total-row">
+              <span>Total Jam Kerja</span>
+              <strong>{{ editDurationLabel }}</strong>
+            </div>
+            <p v-if="editError" class="detail-edit-error">{{ editError }}</p>
+          </template>
         </div>
 
         <div class="detail-modal-actions">
-          <BaseButton @click="closeDetail">Tutup</BaseButton>
+          <template v-if="!isEditingDetail">
+            <BaseButton variant="outline" @click="startEditDetail">Edit</BaseButton>
+            <BaseButton @click="closeDetail">Tutup</BaseButton>
+          </template>
+          <template v-else>
+            <BaseButton variant="outline" @click="cancelEditDetail">Batal</BaseButton>
+            <BaseButton @click="saveDetail">Simpan</BaseButton>
+          </template>
         </div>
       </section>
     </div>
@@ -173,6 +210,14 @@ const draftFilters = reactive({
 
 const activeFilters = reactive({ ...draftFilters })
 const selectedDetail = ref(null)
+const isEditingDetail = ref(false)
+const editError = ref('')
+const attendanceOverrides = reactive({})
+const editForm = reactive({
+  checkIn: '',
+  checkOut: '',
+  workLocation: 'WFO'
+})
 
 const activeMonthLabel = computed(() => months.find((month) => month.value === activeFilters.month)?.label || '')
 
@@ -205,6 +250,18 @@ const detailDateLabel = computed(() => {
   }).format(date)
 })
 
+const editDurationMinutes = computed(() => {
+  const checkIn = timeToMinutes(editForm.checkIn)
+  const checkOut = timeToMinutes(editForm.checkOut)
+
+  if (checkIn === null || checkOut === null || checkOut <= checkIn) return null
+  return checkOut - checkIn
+})
+
+const editDurationLabel = computed(() => (
+  editDurationMinutes.value === null ? '-' : formatDuration(editDurationMinutes.value)
+))
+
 function applyFilters() {
   Object.assign(activeFilters, draftFilters)
   closeDetail()
@@ -222,6 +279,9 @@ function resetFilters() {
 }
 
 function getAttendance(employee, day) {
+  const overrideKey = getAttendanceKey(employee.id, day)
+  if (attendanceOverrides[overrideKey]) return attendanceOverrides[overrideKey]
+
   const date = new Date(Date.UTC(activeFilters.year, activeFilters.month - 1, day, 12))
   const weekday = date.getUTCDay()
 
@@ -239,8 +299,13 @@ function getAttendance(employee, day) {
   return {
     checkIn: minutesToTime(checkInMinutes),
     checkOut: minutesToTime(checkOutMinutes),
-    durationMinutes: workMinutes
+    durationMinutes: workMinutes,
+    workLocation: seed % 2 === 0 ? 'WFO' : 'WFH'
   }
+}
+
+function getAttendanceKey(employeeId, day) {
+  return `${activeFilters.year}-${activeFilters.month}-${day}-${employeeId}`
 }
 
 function minutesToTime(totalMinutes) {
@@ -248,6 +313,15 @@ function minutesToTime(totalMinutes) {
   const hours = Math.floor(normalized / 60)
   const minutes = normalized % 60
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+function timeToMinutes(value) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return null
+
+  const [hours, minutes] = value.split(':').map(Number)
+  if (hours > 23 || minutes > 59) return null
+
+  return hours * 60 + minutes
 }
 
 function formatDuration(minutes) {
@@ -260,11 +334,54 @@ function openDetail(employee, day) {
   const attendance = getAttendance(employee, day)
   if (!attendance) return
 
-  selectedDetail.value = { employee, day, attendance }
+  selectedDetail.value = { employee, day, attendance: { ...attendance } }
+  isEditingDetail.value = false
+  editError.value = ''
+}
+
+function startEditDetail() {
+  if (!selectedDetail.value) return
+
+  Object.assign(editForm, {
+    checkIn: selectedDetail.value.attendance.checkIn,
+    checkOut: selectedDetail.value.attendance.checkOut,
+    workLocation: selectedDetail.value.attendance.workLocation
+  })
+  editError.value = ''
+  isEditingDetail.value = true
+}
+
+function cancelEditDetail() {
+  isEditingDetail.value = false
+  editError.value = ''
+}
+
+function saveDetail() {
+  if (!selectedDetail.value) return
+
+  if (editDurationMinutes.value === null) {
+    editError.value = 'Jam pulang harus lebih besar dari jam masuk.'
+    return
+  }
+
+  const updatedAttendance = {
+    checkIn: editForm.checkIn,
+    checkOut: editForm.checkOut,
+    workLocation: editForm.workLocation,
+    durationMinutes: editDurationMinutes.value
+  }
+
+  const key = getAttendanceKey(selectedDetail.value.employee.id, selectedDetail.value.day)
+  attendanceOverrides[key] = updatedAttendance
+  selectedDetail.value.attendance = { ...updatedAttendance }
+  isEditingDetail.value = false
+  editError.value = ''
 }
 
 function closeDetail() {
   selectedDetail.value = null
+  isEditingDetail.value = false
+  editError.value = ''
 }
 
 function exportToExcel() {
