@@ -19,7 +19,7 @@ body {
 .btn {
   height: 44px;
   padding: 0 16px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
   font-family: inherit;
@@ -82,7 +82,7 @@ body {
   appearance: none;
   -webkit-appearance: none;
   padding-right: 38px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 .select-control .select-chevron {

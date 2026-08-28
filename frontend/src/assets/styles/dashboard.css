@@ -8,7 +8,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 28px;
   align-items: center;
-  padding: 6px 0 4px;
+  padding: 0;
 }
 
 .eyebrow {
@@ -132,15 +132,18 @@
 }
 
 .content-card {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .section-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px;
+  padding: 17px 20px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -164,7 +167,12 @@
 
 .task-list,
 .employee-list {
+  height: 310px;
+  min-height: 0;
   display: grid;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .task-row,
@@ -379,6 +387,17 @@
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 1024px) {
+  .modal-backdrop {
+    padding: 24px 16px;
+  }
+
+  .attendance-modal {
+    max-height: min(680px, calc(100svh - 48px));
   }
 }
 

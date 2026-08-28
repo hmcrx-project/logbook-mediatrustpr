@@ -236,7 +236,7 @@
   height: 34px;
   padding: 0 30px 0 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background-color: #fff;
   color: var(--text);
   font-family: inherit;
@@ -303,7 +303,7 @@
   place-items: center;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: #fff;
   color: var(--text);
   font-family: inherit;
@@ -568,7 +568,7 @@
   gap: 7px;
   padding: 0 12px;
   border: 1px solid rgba(27, 152, 213, .42);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: #fff;
   color: var(--primary);
   font-family: inherit;
@@ -635,7 +635,7 @@
   min-height: 30px;
   padding: 0 9px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: #fff;
   color: var(--text);
   font-family: inherit;
@@ -925,6 +925,20 @@
 
   .task-inline-actions {
     padding-top: 0;
+  }
+}
+
+
+@media (max-width: 1024px) {
+  .task-modal-backdrop,
+  .task-confirm-backdrop {
+    padding: 24px 16px;
+  }
+
+  .task-modal,
+  .date-range-modal,
+  .task-confirm-modal {
+    max-height: min(760px, calc(100svh - 48px));
   }
 }
 

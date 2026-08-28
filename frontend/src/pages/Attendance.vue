@@ -105,7 +105,6 @@
             <tr>
               <th class="employee-column">Nama Karyawan</th>
               <th v-for="day in daysInMonth" :key="day" class="day-column">{{ day }}</th>
-              <th class="total-column">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -117,18 +116,17 @@
               <td v-for="day in daysInMonth" :key="`${employee.id}-${day}`" class="attendance-cell">
                 <button
                   v-if="getAttendance(employee, day)"
-                  class="duration-button"
+                  class="attendance-time-button"
                   type="button"
                   @click="openDetail(employee, day)"
                 >
-                  {{ formatDuration(getAttendance(employee, day).durationMinutes) }}
+                  {{ formatAttendanceRange(getAttendance(employee, day)) }}
                 </button>
                 <span v-else class="empty-attendance">-</span>
               </td>
-              <td class="total-cell">{{ formatDuration(getEmployeeTotalMinutes(employee)) }}</td>
             </tr>
             <tr v-if="filteredEmployees.length === 0">
-              <td :colspan="daysInMonth.length + 2" class="empty-state">
+              <td :colspan="daysInMonth.length + 1" class="empty-state">
                 Tidak ada data karyawan sesuai filter.
               </td>
             </tr>
@@ -367,12 +365,6 @@ function getAttendance(employee, day) {
   }
 }
 
-function getEmployeeTotalMinutes(employee) {
-  return daysInMonth.value.reduce((totalMinutes, day) => {
-    const attendance = getAttendance(employee, day)
-    return totalMinutes + (attendance?.durationMinutes || 0)
-  }, 0)
-}
 
 function getAttendanceKey(employeeId, day) {
   return `${activeFilters.year}-${activeFilters.month}-${day}-${employeeId}`
@@ -392,6 +384,11 @@ function timeToMinutes(value) {
   if (hours > 23 || minutes > 59) return null
 
   return hours * 60 + minutes
+}
+
+function formatAttendanceRange(attendance) {
+  if (!attendance?.checkIn) return '-'
+  return `${attendance.checkIn}–${attendance.checkOut || '…'}`
 }
 
 function formatDuration(minutes) {
@@ -454,22 +451,20 @@ function closeDetail() {
 
 function exportToExcel() {
   const rows = [
-    ['Nama Karyawan', ...daysInMonth.value, 'Total'],
+    ['Nama Karyawan', ...daysInMonth.value],
     ...filteredEmployees.value.map((employee) => [
       employee.name,
       ...daysInMonth.value.map((day) => {
         const attendance = getAttendance(employee, day)
-        return attendance ? formatDuration(attendance.durationMinutes) : '-'
-      }),
-      formatDuration(getEmployeeTotalMinutes(employee))
+        return attendance ? formatAttendanceRange(attendance) : '-'
+      })
     ])
   ]
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows)
   worksheet['!cols'] = [
     { wch: 24 },
-    ...daysInMonth.value.map(() => ({ wch: 9 })),
-    { wch: 12 }
+    ...daysInMonth.value.map(() => ({ wch: 14 }))
   ]
 
   const workbook = XLSX.utils.book_new()

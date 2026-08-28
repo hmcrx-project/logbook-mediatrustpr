@@ -13,7 +13,11 @@
         </div>
 
         <div class="attendance-action">
-          <BaseButton v-if="attendanceState === 'idle'" @click="openCheckInModal">
+          <BaseButton
+            v-if="attendanceState === 'idle'"
+            :disabled="!canCheckIn"
+            @click="openCheckInModal"
+          >
             Absen Masuk
           </BaseButton>
           <BaseButton v-else-if="attendanceState === 'in'" variant="outline" @click="checkOut">
@@ -159,7 +163,12 @@ const isCheckInModalOpen = ref(false)
 const workLocationDraft = ref('')
 const selectedWorkLocation = ref('')
 const checkInSubmitted = ref(false)
-const scheduledStartTime = '09:00'
+const attendanceSchedule = {
+  start: '09:00',
+  end: '17:00',
+  earlyCheckInMinutes: 60
+}
+const scheduledStartTime = attendanceSchedule.start
 let timerId
 
 const dateFormatter = new Intl.DateTimeFormat('id-ID', {
@@ -190,6 +199,14 @@ const displayName = computed(() => {
 
 const currentDate = computed(() => dateFormatter.format(now.value))
 const currentTime = computed(() => timeFormatter.format(now.value).replace(/\./g, ':'))
+const canCheckIn = computed(() => {
+  const [currentHour, currentMinute] = currentTime.value.split(':').map(Number)
+  const [startHour, startMinute] = attendanceSchedule.start.split(':').map(Number)
+  const currentMinutes = currentHour * 60 + currentMinute
+  const earliestCheckInMinutes = startHour * 60 + startMinute - attendanceSchedule.earlyCheckInMinutes
+
+  return currentMinutes >= earliestCheckInMinutes
+})
 const greeting = computed(() => {
   const hour = Number(hourFormatter.format(now.value))
 
@@ -240,6 +257,8 @@ function getJakartaTime(date = new Date()) {
 }
 
 function openCheckInModal() {
+  if (!canCheckIn.value) return
+
   workLocationDraft.value = selectedWorkLocation.value || ''
   checkInSubmitted.value = false
   isCheckInModalOpen.value = true
