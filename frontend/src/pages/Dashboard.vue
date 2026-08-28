@@ -16,14 +16,15 @@
         <div class="attendance-action">
           <div v-if="checkInTime" class="attendance-meta">
             <span>Masuk {{ checkInTime }} WIB</span>
-            <span v-if="checkOutTime">Keluar {{ checkOutTime }} WIB</span>
+            <span v-if="selectedWorkLocation">{{ selectedWorkLocation }}</span>
+            <span v-if="checkOutTime">Pulang {{ checkOutTime }} WIB</span>
           </div>
 
-          <BaseButton v-if="attendanceState === 'idle'" @click="checkIn">
+          <BaseButton v-if="attendanceState === 'idle'" @click="openCheckInModal">
             Absen Masuk
           </BaseButton>
           <BaseButton v-else-if="attendanceState === 'in'" variant="outline" @click="checkOut">
-            Absen Keluar
+            Absen Pulang
           </BaseButton>
           <BaseButton v-else disabled>
             Absensi Selesai
@@ -35,14 +36,14 @@
     <div class="summary-grid">
       <article v-for="item in summaryCards" :key="item.label" class="summary-card card">
         <div :class="['summary-icon', item.tone]" aria-hidden="true">
-          <svg v-if="item.icon === 'open'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="9" /><path d="M12 7v5M12 16h.01" />
+          <svg v-if="item.icon === 'done'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" />
           </svg>
-          <svg v-else-if="item.icon === 'pending'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <svg v-else-if="item.icon === 'progress'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
           </svg>
-          <svg v-else-if="item.icon === 'done'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" />
+          <svg v-else-if="item.icon === 'pending'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9" /><path d="M8 12h8" />
           </svg>
           <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
@@ -51,7 +52,6 @@
         <div>
           <p>{{ item.label }}</p>
           <strong>{{ item.value }}</strong>
-          <span>{{ item.helper }}</span>
         </div>
       </article>
     </div>
@@ -97,6 +97,47 @@
         </div>
       </section>
     </div>
+
+    <div v-if="isCheckInModalOpen" class="modal-backdrop" @click.self="closeCheckInModal">
+      <section class="attendance-modal" role="dialog" aria-modal="true" aria-labelledby="check-in-title">
+        <div class="modal-heading">
+          <div>
+            <h3 id="check-in-title">Absen Masuk</h3>
+            <p>Konfirmasi kehadiran Anda hari ini.</p>
+          </div>
+        </div>
+
+        <div class="modal-content">
+          <div class="attendance-detail-grid">
+            <div class="attendance-detail">
+              <span>Waktu Saat Ini</span>
+              <strong>{{ currentTime }} WIB</strong>
+              <small>{{ currentDate }}</small>
+            </div>
+            <div class="attendance-detail">
+              <span>Jam Masuk Kerja</span>
+              <strong>{{ scheduledStartTime }} WIB</strong>
+              <small>Sesuai jadwal kerja</small>
+            </div>
+          </div>
+
+          <label class="modal-field">
+            <span>Lokasi Kerja</span>
+            <select v-model="workLocationDraft" class="form-input">
+              <option value="" disabled>Pilih WFO atau WFH</option>
+              <option value="WFO">WFO</option>
+              <option value="WFH">WFH</option>
+            </select>
+          </label>
+          <p v-if="modalError" class="modal-error">{{ modalError }}</p>
+        </div>
+
+        <div class="modal-actions">
+          <BaseButton variant="outline" @click="closeCheckInModal">Batal</BaseButton>
+          <BaseButton @click="confirmCheckIn">Absen Masuk</BaseButton>
+        </div>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -111,6 +152,14 @@ const now = ref(new Date())
 const attendanceState = ref('idle')
 const checkInTime = ref('')
 const checkOutTime = ref('')
+const checkInAt = ref(null)
+const checkOutAt = ref(null)
+const workDurationMinutes = ref(0)
+const isCheckInModalOpen = ref(false)
+const workLocationDraft = ref('')
+const selectedWorkLocation = ref('')
+const modalError = ref('')
+const scheduledStartTime = '09:00'
 let timerId
 
 const dateFormatter = new Intl.DateTimeFormat('id-ID', {
@@ -151,21 +200,21 @@ const greeting = computed(() => {
 })
 
 const summaryCards = [
-  { label: 'Selesai', value: '6', helper: 'tugas', tone: 'blue', icon: 'open' },
-  { label: 'On Progress', value: '2', helper: 'tugas', tone: 'orange', icon: 'pending' },
-  { label: 'Pending', value: '14', helper: 'tugas', tone: 'green', icon: 'done' },
-  { label: 'Jam Kerja Minggu Ini', value: '32j 45m', helper: 'total', tone: 'purple', icon: 'clock' }
+  { label: 'Tugas Selesai', value: '6', tone: 'green', icon: 'done' },
+  { label: 'Tugas On Progress', value: '2', tone: 'blue', icon: 'progress' },
+  { label: 'Tugas Pending', value: '14', tone: 'orange', icon: 'pending' },
+  { label: 'Total Jam Kerja Minggu Ini', value: '32j 45m', tone: 'purple', icon: 'clock' }
 ]
 
 const recentTasks = [
   { title: 'Media monitoring harian', date: 'Hari ini', status: 'Selesai', statusClass: 'done' },
   { title: 'Update database media', date: 'Hari ini', status: 'Pending', statusClass: 'pending' },
-  { title: 'Draft laporan campaign', date: 'Kemarin', status: 'Belum Selesai', statusClass: 'open' },
+  { title: 'Draft laporan campaign', date: 'Kemarin', status: 'On Progress', statusClass: 'open' },
   { title: 'Koordinasi kebutuhan klien', date: 'Kemarin', status: 'Selesai', statusClass: 'done' },
   { title: 'Rekap publikasi mingguan', date: '2 hari lalu', status: 'Selesai', statusClass: 'done' }
 ]
 
-const workLocations = [
+const baseWorkLocations = [
   { name: 'Andi Pratama', role: 'Media Relations', location: 'WFO' },
   { name: 'Sinta Wulandari', role: 'Account Executive', location: 'WFH' },
   { name: 'Rudi Setiawan', role: 'Media Monitoring', location: 'WFO' },
@@ -173,17 +222,60 @@ const workLocations = [
   { name: 'Dimas Ardiansyah', role: 'Public Relations', location: 'WFO' }
 ]
 
-function getJakartaTime() {
-  return timeFormatter.format(new Date()).replace(/\./g, ':')
+const workLocations = computed(() => {
+  if (!selectedWorkLocation.value) return baseWorkLocations
+
+  return [
+    {
+      name: displayName.value,
+      role: 'Administrator',
+      location: selectedWorkLocation.value
+    },
+    ...baseWorkLocations.filter((employee) => employee.name !== displayName.value)
+  ]
+})
+
+function getJakartaTime(date = new Date()) {
+  return timeFormatter.format(date).replace(/\./g, ':')
 }
 
-function checkIn() {
-  checkInTime.value = getJakartaTime()
+function openCheckInModal() {
+  workLocationDraft.value = selectedWorkLocation.value || ''
+  modalError.value = ''
+  isCheckInModalOpen.value = true
+}
+
+function closeCheckInModal() {
+  isCheckInModalOpen.value = false
+  modalError.value = ''
+}
+
+function confirmCheckIn() {
+  if (!workLocationDraft.value) {
+    modalError.value = 'Pilih lokasi kerja terlebih dahulu.'
+    return
+  }
+
+  const timestamp = new Date()
+  checkInAt.value = timestamp
+  checkInTime.value = getJakartaTime(timestamp)
+  selectedWorkLocation.value = workLocationDraft.value
   attendanceState.value = 'in'
+  closeCheckInModal()
 }
 
 function checkOut() {
-  checkOutTime.value = getJakartaTime()
+  const timestamp = new Date()
+  checkOutAt.value = timestamp
+  checkOutTime.value = getJakartaTime(timestamp)
+
+  if (checkInAt.value) {
+    workDurationMinutes.value = Math.max(
+      0,
+      Math.round((checkOutAt.value.getTime() - checkInAt.value.getTime()) / 60000)
+    )
+  }
+
   attendanceState.value = 'done'
 }
 
