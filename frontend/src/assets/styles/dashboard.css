@@ -8,19 +8,19 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 28px;
   align-items: center;
-  padding: 26px 28px;
+  padding: 6px 0 4px;
 }
 
 .eyebrow {
   margin: 0 0 5px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .employee-greeting h2 {
   margin: 0;
   color: var(--heading);
-  font-size: clamp(24px, 2.5vw, 32px);
+  font-size: clamp(18px, 1.8vw, 20px);
   line-height: 1.15;
 }
 
@@ -38,20 +38,21 @@
   text-align: right;
 }
 
-.current-date {
+.current-time {
   margin: 0;
-  color: var(--heading);
-  font-size: clamp(20px, 2vw, 27px);
+  color: var(--primary);
+  font-size: clamp(26px, 2.6vw, 30px);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: .01em;
 }
 
-.current-time {
+.current-date {
   margin: 6px 0 0;
-  color: var(--primary);
+  color: var(--heading);
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: .02em;
+  font-weight: 400;
+  line-height: 1.35;
 }
 
 .attendance-action {
@@ -278,7 +279,7 @@
 @media (max-width: 760px) {
   .attendance-panel {
     grid-template-columns: 1fr;
-    padding: 22px;
+    padding: 4px 0;
   }
 
   .attendance-clock {

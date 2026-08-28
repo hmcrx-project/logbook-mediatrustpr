@@ -1,16 +1,16 @@
 <template>
   <section class="dashboard-page">
-    <div class="attendance-panel card">
+    <div class="attendance-panel">
       <div class="employee-greeting">
-        <p class="eyebrow">Selamat datang,</p>
+        <p class="eyebrow">{{ greeting }},</p>
         <h2>{{ displayName }}</h2>
         <p class="employee-role">Administrator</p>
       </div>
 
       <div class="attendance-clock">
         <div>
-          <p class="current-date">{{ currentDate }}</p>
           <p class="current-time">{{ currentTime }} WIB</p>
+          <p class="current-date">{{ currentDate }}</p>
         </div>
 
         <div class="attendance-action">
@@ -125,8 +125,13 @@ const timeFormatter = new Intl.DateTimeFormat('id-ID', {
   timeZone: JAKARTA_TIME_ZONE,
   hour: '2-digit',
   minute: '2-digit',
-  second: '2-digit',
   hour12: false
+})
+
+const hourFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: JAKARTA_TIME_ZONE,
+  hour: '2-digit',
+  hourCycle: 'h23'
 })
 
 const displayName = computed(() => {
@@ -136,6 +141,14 @@ const displayName = computed(() => {
 
 const currentDate = computed(() => dateFormatter.format(now.value))
 const currentTime = computed(() => timeFormatter.format(now.value).replace(/\./g, ':'))
+const greeting = computed(() => {
+  const hour = Number(hourFormatter.format(now.value))
+
+  if (hour >= 5 && hour < 11) return 'Selamat Pagi'
+  if (hour >= 11 && hour < 15) return 'Selamat Siang'
+  if (hour >= 15 && hour < 18) return 'Selamat Sore'
+  return 'Selamat Malam'
+})
 
 const summaryCards = [
   { label: 'Belum Selesai', value: '6', helper: 'tugas', tone: 'blue', icon: 'open' },
