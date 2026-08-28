@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "logbook-mediatrustpr-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-29",
+  "vars": {
+    "APP_ENV": "development",
+    "APP_TIMEZONE": "Asia/Jakarta",
+    "FRONTEND_ORIGIN": "https://logbook-mediatrustpr.pages.dev"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "logbook-mediatrustpr",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
