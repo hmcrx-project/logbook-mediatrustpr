@@ -161,6 +161,18 @@
   min-width: 72px;
 }
 
+.total-column,
+.total-cell {
+  width: 96px;
+  min-width: 96px;
+  font-weight: 700;
+}
+
+.total-cell {
+  color: var(--heading);
+  background: #FBFCFE !important;
+}
+
 .duration-button {
   min-width: 55px;
   padding: 5px 7px;

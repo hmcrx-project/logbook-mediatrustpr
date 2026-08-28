@@ -61,6 +61,7 @@
             <tr>
               <th class="employee-column">Nama Karyawan</th>
               <th v-for="day in daysInMonth" :key="day" class="day-column">{{ day }}</th>
+              <th class="total-column">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -80,9 +81,10 @@
                 </button>
                 <span v-else class="empty-attendance">-</span>
               </td>
+              <td class="total-cell">{{ formatDuration(getEmployeeTotalMinutes(employee)) }}</td>
             </tr>
             <tr v-if="filteredEmployees.length === 0">
-              <td :colspan="daysInMonth.length + 1" class="empty-state">
+              <td :colspan="daysInMonth.length + 2" class="empty-state">
                 Tidak ada data karyawan sesuai filter.
               </td>
             </tr>
@@ -303,6 +305,13 @@ function getAttendance(employee, day) {
     durationMinutes: workMinutes,
     workLocation: seed % 2 === 0 ? 'WFO' : 'WFH'
   }
+}
+
+function getEmployeeTotalMinutes(employee) {
+  return daysInMonth.value.reduce((totalMinutes, day) => {
+    const attendance = getAttendance(employee, day)
+    return totalMinutes + (attendance?.durationMinutes || 0)
+  }, 0)
 }
 
 function getAttendanceKey(employeeId, day) {
