@@ -15,53 +15,78 @@
 
         <label class="task-filter-field">
           <span>Status</span>
-          <select v-model="draftFilters.status" class="form-input">
-            <option value="all">Semua Status</option>
-            <option v-for="status in taskStatuses" :key="status" :value="status">
-              {{ status }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.status" class="form-input">
+              <option value="all">Semua Status</option>
+              <option v-for="status in taskStatuses" :key="status" :value="status">
+                {{ status }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="task-filter-field">
           <span>Klien</span>
-          <select v-model="draftFilters.client" class="form-input">
-            <option value="all">Semua Klien</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.name }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.client" class="form-input">
+              <option value="all">Semua Klien</option>
+              <option v-for="client in clients" :key="client.id" :value="client.id">
+                {{ client.name }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="task-filter-field">
           <span>Nama Karyawan</span>
-          <select v-model="draftFilters.employee" class="form-input">
-            <option value="all">Semua Karyawan</option>
-            <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-              {{ employee.name }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.employee" class="form-input">
+              <option value="all">Semua Karyawan</option>
+              <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                {{ employee.name }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="task-filter-field">
           <span>Jabatan</span>
-          <select v-model="draftFilters.position" class="form-input">
-            <option value="all">Semua Jabatan</option>
-            <option v-for="position in positions" :key="position" :value="position">
-              {{ position }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.position" class="form-input">
+              <option value="all">Semua Jabatan</option>
+              <option v-for="position in positions" :key="position" :value="position">
+                {{ position }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="task-filter-field">
           <span>Tanggal</span>
-          <select v-model="draftFilters.dateRange" class="form-input" @change="handleDateRangeSelection">
-            <option value="all">Semua Tanggal</option>
-            <option value="yesterday">Kemarin</option>
-            <option value="last7">7 Hari Terakhir</option>
-            <option value="last30">30 Hari Terakhir</option>
-            <option value="custom">Kustom</option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.dateRange" class="form-input" @change="handleDateRangeSelection">
+              <option value="all">Semua Tanggal</option>
+              <option value="yesterday">Kemarin</option>
+              <option value="last7">7 Hari Terakhir</option>
+              <option value="last30">30 Hari Terakhir</option>
+              <option value="custom">Kustom</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <div class="task-inline-actions">
@@ -112,14 +137,19 @@
               <td>{{ row.start || '-' }}</td>
               <td>{{ row.end || '-' }}</td>
               <td>
-                <select
-                  :value="row.status"
-                  :class="['task-status-select', statusClass(row.status)]"
-                  :aria-label="`Ubah status ${row.name}`"
-                  @change="updateTaskStatus(row.taskId, $event.target.value)"
-                >
-                  <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
-                </select>
+                <span class="select-control task-status-control">
+                  <select
+                    :value="row.status"
+                    :class="['task-status-select', statusClass(row.status)]"
+                    :aria-label="`Ubah status ${row.name}`"
+                    @change="updateTaskStatus(row.taskId, $event.target.value)"
+                  >
+                    <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
+                  </select>
+                  <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
               </td>
               <td class="assignee-cell">{{ employeeName(row.employeeId) }}</td>
               <td>{{ formatDate(row.deadline) }}</td>
@@ -143,7 +173,9 @@
             aria-label="Halaman sebelumnya"
             @click="changePage(currentPage - 1)"
           >
-            ‹
+            <svg class="pagination-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m12 5-5 5 5 5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
           <button
             v-for="page in visiblePages"
@@ -161,15 +193,22 @@
             aria-label="Halaman berikutnya"
             @click="changePage(currentPage + 1)"
           >
-            ›
+            <svg class="pagination-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m8 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
 
           <label class="page-size-control">
             <span>Tampilkan</span>
-            <select v-model.number="pageSize" class="form-input page-size-select" @change="resetPagination">
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-            </select>
+            <span class="select-control page-size-select-control">
+              <select v-model.number="pageSize" class="form-input page-size-select" @change="resetPagination">
+                <option :value="10">10</option>
+                <option :value="20">20</option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </label>
         </div>
       </div>
@@ -224,7 +263,12 @@
                 <span>Waktu Pengerjaan</span>
                 <small>{{ selectedTask.sessions.length }} sesi</small>
               </div>
-              <button type="button" class="session-add-button" @click="openAddSession">+ Tambahkan Jam</button>
+              <button type="button" class="session-add-button" @click="openAddSession">
+                <svg class="button-inline-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M10 4v12M4 10h12" stroke-linecap="round" />
+                </svg>
+                <span>Tambahkan Jam</span>
+              </button>
             </div>
 
             <div class="task-session-list">
@@ -263,7 +307,7 @@
                   <input
                     v-model="sessionForm.end"
                     type="time"
-                    :class="['form-input', { 'is-error': sessionFormSubmitted && isSessionEndInvalid(sessionForm) }]"
+                    :class="['form-input', { 'is-error': sessionFormSubmitted && (!sessionForm.end || isSessionEndInvalid(sessionForm)) }]"
                   />
                 </label>
               </div>
@@ -290,28 +334,43 @@
 
           <label class="task-form-field">
             <span>Klien</span>
-            <select v-model="taskForm.clientId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.clientId }]">
-              <option v-for="client in clients" :key="client.id" :value="client.id">
-                {{ client.name }}
-              </option>
-            </select>
+            <span class="select-control">
+              <select v-model="taskForm.clientId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.clientId }]">
+                <option v-for="client in clients" :key="client.id" :value="client.id">
+                  {{ client.name }}
+                </option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </label>
 
           <label class="task-form-field">
             <span>Status</span>
-            <select v-model="taskForm.status" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.status }]">
-              <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
-            </select>
+            <span class="select-control">
+              <select v-model="taskForm.status" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.status }]">
+                <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </label>
 
           <label class="task-form-field">
             <span>Dikerjakan</span>
-            <select v-model="taskForm.employeeId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.employeeId }]">
-              <option value="" disabled>Pilih karyawan</option>
-              <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-                {{ employee.name }}
-              </option>
-            </select>
+            <span class="select-control">
+              <select v-model="taskForm.employeeId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.employeeId }]">
+                <option value="" disabled>Pilih karyawan</option>
+                <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                  {{ employee.name }}
+                </option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </label>
 
           <label class="task-form-field">
@@ -330,7 +389,12 @@
                 <span>Waktu Pengerjaan</span>
                 <small>Setiap waktu pengerjaan akan tampil sebagai satu baris di tabel.</small>
               </div>
-              <button type="button" class="session-add-button" @click="addTaskFormSession">+ Tambahkan Jam</button>
+              <button type="button" class="session-add-button" @click="addTaskFormSession">
+                <svg class="button-inline-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M10 4v12M4 10h12" stroke-linecap="round" />
+                </svg>
+                <span>Tambahkan Jam</span>
+              </button>
             </div>
 
             <div class="task-form-session-list">
@@ -356,7 +420,7 @@
                   <input
                     v-model="session.end"
                     type="time"
-                    :class="['form-input', { 'is-error': taskFormSubmitted && isSessionEndInvalid(session) }]"
+                    :class="['form-input', { 'is-error': taskFormSubmitted && (!session.end || isSessionEndInvalid(session)) }]"
                   />
                 </label>
                 <button type="button" class="task-form-session-remove" :disabled="taskForm.sessions.length === 1" @click="removeTaskFormSession(index)">Hapus</button>
@@ -411,9 +475,17 @@
 
         <div class="date-range-content">
           <div class="date-range-toolbar">
-            <button type="button" class="calendar-nav-button" aria-label="Bulan sebelumnya" @click="moveCalendar(-1)">‹</button>
+            <button type="button" class="calendar-nav-button" aria-label="Bulan sebelumnya" @click="moveCalendar(-1)">
+              <svg class="calendar-nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m12 5-5 5 5 5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
             <strong>{{ calendarMonth.label }}</strong>
-            <button type="button" class="calendar-nav-button" aria-label="Bulan berikutnya" @click="moveCalendar(1)">›</button>
+            <button type="button" class="calendar-nav-button" aria-label="Bulan berikutnya" @click="moveCalendar(1)">
+              <svg class="calendar-nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m8 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
           </div>
 
           <div class="date-range-calendars">
@@ -900,7 +972,7 @@ function isSessionEndInvalid(session) {
 function validateSessions(sessions) {
   return Boolean(
     sessions.length &&
-    sessions.every((session) => session.date && session.start && !isSessionEndInvalid(session))
+    sessions.every((session) => session.date && session.start && session.end && !isSessionEndInvalid(session))
   )
 }
 
@@ -987,7 +1059,7 @@ function cancelSessionEditor() {
 }
 
 function validateSessionForm() {
-  return Boolean(sessionForm.date && sessionForm.start && !isSessionEndInvalid(sessionForm))
+  return Boolean(sessionForm.date && sessionForm.start && sessionForm.end && !isSessionEndInvalid(sessionForm))
 }
 
 function saveSession() {

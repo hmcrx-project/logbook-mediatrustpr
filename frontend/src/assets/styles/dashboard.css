@@ -274,6 +274,9 @@
 
 .attendance-modal {
   width: min(100%, 460px);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -281,6 +284,7 @@
 }
 
 .modal-heading {
+  flex: 0 0 auto;
   padding: 20px 22px 16px;
   border-bottom: 1px solid var(--border);
 }
@@ -298,6 +302,9 @@
 }
 
 .modal-content {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: grid;
   gap: 18px;
   padding: 20px 22px;
@@ -353,6 +360,7 @@
 }
 
 .modal-actions {
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
   gap: 10px;

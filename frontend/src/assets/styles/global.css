@@ -19,7 +19,7 @@ body {
 .btn {
   height: 44px;
   padding: 0 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
   font-family: inherit;
@@ -68,6 +68,36 @@ body {
 
 .form-input.is-error {
   border-color: var(--error);
+}
+
+.select-control {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.select-control select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  border-radius: var(--radius-sm);
+}
+
+.select-control .select-chevron {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.select-control select:disabled + .select-chevron {
+  color: var(--disabled-text);
 }
 
 a {

@@ -4,38 +4,58 @@
       <div class="filter-grid">
         <label class="filter-field">
           <span>Nama Karyawan</span>
-          <select v-model="draftFilters.employee" class="form-input">
-            <option value="all">Semua Karyawan</option>
-            <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-              {{ employee.name }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.employee" class="form-input">
+              <option value="all">Semua Karyawan</option>
+              <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                {{ employee.name }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="filter-field">
           <span>Jabatan</span>
-          <select v-model="draftFilters.position" class="form-input">
-            <option value="all">Semua Jabatan</option>
-            <option v-for="position in positions" :key="position" :value="position">
-              {{ position }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model="draftFilters.position" class="form-input">
+              <option value="all">Semua Jabatan</option>
+              <option v-for="position in positions" :key="position" :value="position">
+                {{ position }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="filter-field">
           <span>Bulan</span>
-          <select v-model.number="draftFilters.month" class="form-input">
-            <option v-for="month in months" :key="month.value" :value="month.value">
-              {{ month.label }}
-            </option>
-          </select>
+          <span class="select-control">
+            <select v-model.number="draftFilters.month" class="form-input">
+              <option v-for="month in months" :key="month.value" :value="month.value">
+                {{ month.label }}
+              </option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <label class="filter-field">
           <span>Tahun</span>
-          <select v-model.number="draftFilters.year" class="form-input">
-            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-          </select>
+          <span class="select-control">
+            <select v-model.number="draftFilters.year" class="form-input">
+              <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </label>
 
         <div class="filter-inline-actions">
@@ -154,13 +174,18 @@
             </label>
             <label class="detail-edit-field">
               <span>Lokasi Kerja</span>
-              <select
-                v-model="editForm.workLocation"
-                :class="['form-input', { 'is-error': editSubmitted && !editForm.workLocation }]"
-              >
-                <option value="WFO">WFO</option>
-                <option value="WFH">WFH</option>
-              </select>
+              <span class="select-control">
+                <select
+                  v-model="editForm.workLocation"
+                  :class="['form-input', { 'is-error': editSubmitted && !editForm.workLocation }]"
+                >
+                  <option value="WFO">WFO</option>
+                  <option value="WFH">WFH</option>
+                </select>
+                <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
             </label>
             <div class="detail-row total-row">
               <span>Total Jam Kerja</span>

@@ -116,14 +116,19 @@
 
           <label class="modal-field">
             <span>Lokasi Kerja</span>
-            <select
-              v-model="workLocationDraft"
-              :class="['form-input', { 'is-error': checkInSubmitted && !workLocationDraft }]"
-            >
-              <option value="" disabled>Pilih WFO atau WFH</option>
-              <option value="WFO">WFO</option>
-              <option value="WFH">WFH</option>
-            </select>
+            <span class="select-control">
+              <select
+                v-model="workLocationDraft"
+                :class="['form-input', { 'is-error': checkInSubmitted && !workLocationDraft }]"
+              >
+                <option value="" disabled>Pilih WFO atau WFH</option>
+                <option value="WFO">WFO</option>
+                <option value="WFH">WFH</option>
+              </select>
+              <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </label>
         </div>
 
