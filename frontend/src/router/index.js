@@ -46,16 +46,19 @@ const router = createRouter({
           meta: { title: 'Laporan' }
         },
         {
+          path: 'pengaturan/karyawan',
+          component: PlaceholderPage,
+          props: {
+            title: 'Karyawan',
+            description: 'Halaman master data karyawan akan dikembangkan pada tahap berikutnya.'
+          },
+          meta: { title: 'Karyawan' }
+        },
+        {
           path: 'pengaturan/jabatan',
           component: PlaceholderPage,
           props: { title: 'Pengaturan Jabatan' },
           meta: { title: 'Pengaturan Jabatan' }
-        },
-        {
-          path: 'pengaturan/absensi',
-          component: PlaceholderPage,
-          props: { title: 'Pengaturan Absensi' },
-          meta: { title: 'Pengaturan Absensi' }
         },
         {
           path: 'pengaturan/permission',
@@ -68,6 +71,15 @@ const router = createRouter({
           component: PlaceholderPage,
           props: { title: 'Klien' },
           meta: { title: 'Klien' }
+        },
+        {
+          path: 'pengaturan/database',
+          component: PlaceholderPage,
+          props: {
+            title: 'Database',
+            description: 'Halaman administrasi database akan dikembangkan pada tahap berikutnya.'
+          },
+          meta: { title: 'Database' }
         }
       ]
     }

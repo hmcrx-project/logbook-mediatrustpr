@@ -66,10 +66,11 @@
         </button>
 
         <div v-show="settingsOpen" class="nav-submenu">
+          <RouterLink to="/pengaturan/karyawan" @click="emit('close')">Karyawan</RouterLink>
           <RouterLink to="/pengaturan/jabatan" @click="emit('close')">Jabatan</RouterLink>
-          <RouterLink to="/pengaturan/absensi" @click="emit('close')">Absensi</RouterLink>
           <RouterLink to="/pengaturan/permission" @click="emit('close')">Permission</RouterLink>
           <RouterLink to="/pengaturan/klien" @click="emit('close')">Klien</RouterLink>
+          <RouterLink to="/pengaturan/database" @click="emit('close')">Database</RouterLink>
         </div>
       </div>
     </nav>
