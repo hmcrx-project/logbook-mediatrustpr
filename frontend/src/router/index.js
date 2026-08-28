@@ -1,24 +1,75 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../pages/Login.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import PlaceholderPage from '../pages/PlaceholderPage.vue'
+import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      redirect: '/login'
-    },
-    {
       path: '/login',
       component: Login,
       meta: { guestOnly: true }
     },
     {
-      path: '/dashboard',
-      component: Dashboard,
-      meta: { requiresAuth: true }
+      path: '/',
+      component: MainLayout,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          redirect: '/login'
+        },
+        {
+          path: 'dashboard',
+          component: Dashboard,
+          meta: { title: 'Dashboard' }
+        },
+        {
+          path: 'absensi',
+          component: PlaceholderPage,
+          props: { title: 'Absensi' },
+          meta: { title: 'Absensi' }
+        },
+        {
+          path: 'tugas',
+          component: PlaceholderPage,
+          props: { title: 'Tugas' },
+          meta: { title: 'Tugas' }
+        },
+        {
+          path: 'laporan',
+          component: PlaceholderPage,
+          props: { title: 'Laporan' },
+          meta: { title: 'Laporan' }
+        },
+        {
+          path: 'pengaturan/jabatan',
+          component: PlaceholderPage,
+          props: { title: 'Pengaturan Jabatan' },
+          meta: { title: 'Pengaturan Jabatan' }
+        },
+        {
+          path: 'pengaturan/absensi',
+          component: PlaceholderPage,
+          props: { title: 'Pengaturan Absensi' },
+          meta: { title: 'Pengaturan Absensi' }
+        },
+        {
+          path: 'pengaturan/permission',
+          component: PlaceholderPage,
+          props: { title: 'Permission' },
+          meta: { title: 'Permission' }
+        },
+        {
+          path: 'pengaturan/klien',
+          component: PlaceholderPage,
+          props: { title: 'Klien' },
+          meta: { title: 'Klien' }
+        }
+      ]
     }
   ]
 })
