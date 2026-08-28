@@ -8,7 +8,7 @@
           v-model.trim="searchQuery"
           type="text"
           class="form-input employee-search-input"
-          placeholder="Cari nama, jabatan, atau email"
+          placeholder="Cari nama, username, atau jabatan"
           aria-label="Cari karyawan"
           autocomplete="off"
           @input="resetPagination"
@@ -30,8 +30,8 @@
           <thead>
             <tr>
               <th class="employee-name-column">Nama Karyawan</th>
+              <th class="employee-username-column">Username</th>
               <th>Jabatan</th>
-              <th class="employee-email-column">Email</th>
               <th>Status</th>
               <th class="employee-action-column">Tindakan</th>
             </tr>
@@ -44,8 +44,8 @@
                   <span>{{ employee.name }}</span>
                 </button>
               </td>
+              <td>{{ employee.username }}</td>
               <td>{{ employee.position }}</td>
-              <td>{{ employee.email }}</td>
               <td><span :class="['employee-status-badge', employee.status === 'Aktif' ? 'is-active' : 'is-inactive']">{{ employee.status }}</span></td>
               <td>
                 <div class="employee-row-actions">
@@ -157,6 +157,10 @@
               <strong>{{ selectedEmployee.name }}</strong>
             </div>
             <div class="employee-detail-row">
+              <span>Username</span>
+              <strong>{{ selectedEmployee.username }}</strong>
+            </div>
+            <div class="employee-detail-row">
               <span>Jabatan</span>
               <strong>{{ selectedEmployee.position }}</strong>
             </div>
@@ -179,6 +183,18 @@
               type="text"
               :class="['form-input', { 'is-error': employeeFormSubmitted && !employeeForm.name }]"
               autocomplete="off"
+            />
+          </label>
+
+          <label class="employee-form-field">
+            <span>Username</span>
+            <input
+              v-model.trim="employeeForm.username"
+              type="text"
+              :class="['form-input', { 'is-error': employeeFormSubmitted && (!usernameIsValid || !usernameIsUnique) }]"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
             />
           </label>
 
@@ -315,19 +331,19 @@ const positions = [
 ]
 
 const employees = ref([
-  { id: 'emp-002', name: 'Andi Pratama', position: 'Account Executive', email: 'andi.pratama@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-003', name: 'Sinta Maharani', position: 'Media Relations', email: 'sinta.maharani@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-004', name: 'Raka Putra', position: 'Monitoring Analyst', email: 'raka.putra@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-005', name: 'Nadia Rahma', position: 'Content Specialist', email: 'nadia.rahma@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-006', name: 'Dimas Saputra', position: 'Account Executive', email: 'dimas.saputra@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-007', name: 'Rina Kurnia', position: 'Media Relations', email: 'rina.kurnia@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-008', name: 'Fajar Nugraha', position: 'Monitoring Analyst', email: 'fajar.nugraha@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-009', name: 'Tania Putri', position: 'Content Specialist', email: 'tania.putri@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-010', name: 'Yusuf Ramadhan', position: 'Project Manager', email: 'yusuf.ramadhan@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-011', name: 'Maya Lestari', position: 'Account Executive', email: 'maya.lestari@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-012', name: 'Rizky Hidayat', position: 'Media Relations', email: 'rizky.hidayat@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-013', name: 'Putri Aulia', position: 'Monitoring Analyst', email: 'putri.aulia@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
-  { id: 'emp-014', name: 'Bagas Wiratama', position: 'Content Specialist', email: 'bagas.wiratama@mediatrustpr.id', password: 'demo1234', status: 'Nonaktif' }
+  { id: 'emp-002', name: 'Andi Pratama', username: 'andi.pratama', position: 'Account Executive', email: 'andi.pratama@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-003', name: 'Sinta Maharani', username: 'sinta.maharani', position: 'Media Relations', email: 'sinta.maharani@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-004', name: 'Raka Putra', username: 'raka.putra', position: 'Monitoring Analyst', email: 'raka.putra@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-005', name: 'Nadia Rahma', username: 'nadia.rahma', position: 'Content Specialist', email: 'nadia.rahma@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-006', name: 'Dimas Saputra', username: 'dimas.saputra', position: 'Account Executive', email: 'dimas.saputra@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-007', name: 'Rina Kurnia', username: 'rina.kurnia', position: 'Media Relations', email: 'rina.kurnia@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-008', name: 'Fajar Nugraha', username: 'fajar.nugraha', position: 'Monitoring Analyst', email: 'fajar.nugraha@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-009', name: 'Tania Putri', username: 'tania.putri', position: 'Content Specialist', email: 'tania.putri@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-010', name: 'Yusuf Ramadhan', username: 'yusuf.ramadhan', position: 'Project Manager', email: 'yusuf.ramadhan@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-011', name: 'Maya Lestari', username: 'maya.lestari', position: 'Account Executive', email: 'maya.lestari@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-012', name: 'Rizky Hidayat', username: 'rizky.hidayat', position: 'Media Relations', email: 'rizky.hidayat@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-013', name: 'Putri Aulia', username: 'putri.aulia', position: 'Monitoring Analyst', email: 'putri.aulia@mediatrustpr.id', password: 'demo1234', status: 'Aktif' },
+  { id: 'emp-014', name: 'Bagas Wiratama', username: 'bagas.wiratama', position: 'Content Specialist', email: 'bagas.wiratama@mediatrustpr.id', password: 'demo1234', status: 'Nonaktif' }
 ])
 
 const searchQuery = ref('')
@@ -342,6 +358,7 @@ const isDeleteConfirmOpen = ref(false)
 
 const employeeForm = reactive({
   name: '',
+  username: '',
   position: '',
   email: '',
   status: 'Aktif',
@@ -355,6 +372,14 @@ const passwordForm = reactive({
 })
 
 const selectedEmployee = computed(() => employees.value.find((employee) => employee.id === selectedEmployeeId.value) || null)
+const reservedUsernames = new Set(['admin'])
+const normalizedUsername = computed(() => employeeForm.username.trim().toLowerCase())
+const usernameIsValid = computed(() => /^[a-z0-9._]+$/.test(normalizedUsername.value))
+const usernameIsUnique = computed(() => {
+  const username = normalizedUsername.value
+  if (!username || reservedUsernames.has(username)) return false
+  return !employees.value.some((employee) => employee.username.toLowerCase() === username && employee.id !== selectedEmployeeId.value)
+})
 const emailIsUnique = computed(() => {
   const email = employeeForm.email.trim().toLowerCase()
   if (!email) return false
@@ -363,7 +388,7 @@ const emailIsUnique = computed(() => {
 const filteredEmployees = computed(() => {
   const query = searchQuery.value.toLowerCase()
   const matchingEmployees = query
-    ? employees.value.filter((employee) => [employee.name, employee.position, employee.email]
+    ? employees.value.filter((employee) => [employee.name, employee.username, employee.position]
       .some((value) => String(value || '').toLowerCase().includes(query)))
     : employees.value
 
@@ -412,6 +437,7 @@ function initials(name) {
 function resetEmployeeForm() {
   Object.assign(employeeForm, {
     name: '',
+    username: '',
     position: '',
     email: '',
     status: 'Aktif',
@@ -440,6 +466,7 @@ function openEditEmployee(employeeId) {
   selectedEmployeeId.value = employeeId
   Object.assign(employeeForm, {
     name: employee.name,
+    username: employee.username,
     position: employee.position,
     email: employee.email,
     status: employee.status,
@@ -468,7 +495,7 @@ function closeEmployeeModal() {
 }
 
 function employeeFormIsValid() {
-  const baseValid = Boolean(employeeForm.name && employeeForm.position && employeeForm.email && employeeForm.status && emailIsUnique.value)
+  const baseValid = Boolean(employeeForm.name && usernameIsValid.value && usernameIsUnique.value && employeeForm.position && employeeForm.email && employeeForm.status && emailIsUnique.value)
   if (employeeModalMode.value === 'edit') return baseValid
   return baseValid && Boolean(employeeForm.password) && employeeForm.confirmPassword === employeeForm.password
 }
@@ -481,6 +508,7 @@ function saveEmployee() {
     employees.value.push({
       id: `emp-${Date.now()}`,
       name: employeeForm.name,
+      username: normalizedUsername.value,
       position: employeeForm.position,
       email: employeeForm.email,
       password: employeeForm.password,
@@ -491,6 +519,7 @@ function saveEmployee() {
     const employee = selectedEmployee.value
     if (!employee) return
     employee.name = employeeForm.name
+    employee.username = normalizedUsername.value
     employee.position = employeeForm.position
     employee.email = employeeForm.email
     employee.status = employeeForm.status

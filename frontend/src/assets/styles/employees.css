@@ -65,7 +65,7 @@
 
 .employees-table {
   width: 100%;
-  min-width: 1040px;
+  min-width: 960px;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--text);
@@ -105,9 +105,9 @@
   min-width: 270px;
 }
 
-.employee-email-column {
-  width: 250px;
-  min-width: 250px;
+.employee-username-column {
+  width: 190px;
+  min-width: 190px;
 }
 
 .employee-action-column {
