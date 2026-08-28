@@ -65,7 +65,7 @@
 
 .employees-table {
   width: 100%;
-  min-width: 940px;
+  min-width: 1040px;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--text);
@@ -590,4 +590,28 @@
   .employee-modal-actions.single-action {
     grid-template-columns: 1fr;
   }
+}
+
+
+.employee-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.employee-status-badge.is-active {
+  border: 1px solid rgba(22, 163, 74, .25);
+  background: rgba(22, 163, 74, .08);
+  color: var(--success);
+}
+
+.employee-status-badge.is-inactive {
+  border: 1px solid #D7DEE7;
+  background: #F4F6F8;
+  color: var(--text-muted);
 }

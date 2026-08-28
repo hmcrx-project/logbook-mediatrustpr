@@ -4,6 +4,10 @@ import Dashboard from '../pages/Dashboard.vue'
 import Attendance from '../pages/Attendance.vue'
 import Tasks from '../pages/Tasks.vue'
 import Employees from '../pages/Employees.vue'
+import Positions from '../pages/Positions.vue'
+import Permissions from '../pages/Permissions.vue'
+import Clients from '../pages/Clients.vue'
+import Database from '../pages/Database.vue'
 import PlaceholderPage from '../pages/PlaceholderPage.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
@@ -53,29 +57,22 @@ const router = createRouter({
         },
         {
           path: 'pengaturan/jabatan',
-          component: PlaceholderPage,
-          props: { title: 'Pengaturan Jabatan' },
-          meta: { title: 'Pengaturan Jabatan' }
+          component: Positions,
+          meta: { title: 'Jabatan' }
         },
         {
           path: 'pengaturan/permission',
-          component: PlaceholderPage,
-          props: { title: 'Permission' },
+          component: Permissions,
           meta: { title: 'Permission' }
         },
         {
           path: 'pengaturan/klien',
-          component: PlaceholderPage,
-          props: { title: 'Klien' },
+          component: Clients,
           meta: { title: 'Klien' }
         },
         {
           path: 'pengaturan/database',
-          component: PlaceholderPage,
-          props: {
-            title: 'Database',
-            description: 'Halaman administrasi database akan dikembangkan pada tahap berikutnya.'
-          },
+          component: Database,
           meta: { title: 'Database' }
         }
       ]

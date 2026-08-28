@@ -1,0 +1,36 @@
+.permissions-page { display: grid; gap: 16px; min-width: 0; }
+.permission-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; }
+.permission-intro h2,
+.permission-section-heading h2 { margin: 0; color: var(--heading); font-size: 16px; }
+.permission-intro p,
+.permission-section-heading p { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.permission-preset-badge { min-height: 30px; display: inline-flex; align-items: center; padding: 0 10px; border: 1px solid rgba(27, 152, 213, .22); border-radius: 8px; background: rgba(27, 152, 213, .08); color: var(--primary-hover); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.permission-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.permission-role-card { display: flex; align-items: flex-start; gap: 13px; padding: 18px; }
+.permission-role-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 42px; border: 1px solid rgba(27, 152, 213, .2); border-radius: 12px; background: rgba(27, 152, 213, .07); color: var(--primary); }
+.permission-role-icon svg { width: 22px; height: 22px; }
+.permission-role-card h3,
+.permission-note-card h3 { margin: 1px 0 0; color: var(--heading); font-size: 14px; }
+.permission-role-card p,
+.permission-note-card p { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.permission-matrix-card { overflow: hidden; min-width: 0; }
+.permission-section-heading { padding: 17px 20px; border-bottom: 1px solid var(--border); }
+.permission-table-scroll { width: 100%; overflow-x: auto; scrollbar-gutter: stable; }
+.permission-table { width: 100%; min-width: 840px; border-collapse: separate; border-spacing: 0; color: var(--text); font-size: 12px; }
+.permission-table th,
+.permission-table td { min-height: 54px; padding: 12px 14px; border-right: 1px solid #E7EDF3; border-bottom: 1px solid #E7EDF3; background: #fff; text-align: left; vertical-align: middle; }
+.permission-table thead th { background: #F8FAFC; color: var(--heading); font-weight: 700; }
+.permission-table tr:last-child > * { border-bottom: 0; }
+.permission-table tr > *:last-child { border-right: 0; }
+.permission-table td:first-child { width: 34%; }
+.permission-table td:first-child strong { display: block; color: var(--heading); }
+.permission-table td:first-child span { display: block; margin-top: 3px; color: var(--text-muted); font-size: 11px; line-height: 1.4; white-space: normal; }
+.permission-value { display: inline-flex; align-items: center; min-height: 28px; padding: 0 9px; border-radius: 8px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.permission-value.is-allowed { border: 1px solid rgba(22, 163, 74, .25); background: rgba(22, 163, 74, .08); color: var(--success); }
+.permission-value.is-own { border: 1px solid rgba(27, 152, 213, .22); background: rgba(27, 152, 213, .08); color: var(--primary-hover); }
+.permission-value.is-denied { border: 1px solid #D7DEE7; background: #F4F6F8; color: var(--text-muted); }
+.permission-note-card { display: flex; align-items: flex-start; gap: 13px; padding: 18px 20px; }
+.permission-note-icon { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 36px; border-radius: 10px; background: rgba(245, 137, 32, .08); color: var(--secondary); }
+.permission-note-icon svg { width: 20px; height: 20px; }
+@media (max-width: 900px) { .permission-role-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .permission-intro { align-items: flex-start; flex-direction: column; } }
