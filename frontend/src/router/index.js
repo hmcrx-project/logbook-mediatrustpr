@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../pages/Login.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Attendance from '../pages/Attendance.vue'
+import Tasks from '../pages/Tasks.vue'
 import PlaceholderPage from '../pages/PlaceholderPage.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
@@ -35,8 +36,7 @@ const router = createRouter({
         },
         {
           path: 'tugas',
-          component: PlaceholderPage,
-          props: { title: 'Tugas' },
+          component: Tasks,
           meta: { title: 'Tugas' }
         },
         {

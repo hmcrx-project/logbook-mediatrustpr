@@ -39,7 +39,7 @@
             <circle cx="12" cy="12" r="9" /><path d="M8 12h8" />
           </svg>
           <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+            <circle cx="12" cy="12" r="9" /><path d="m9 9 6 6M15 9l-6 6" />
           </svg>
         </div>
         <div>
@@ -194,9 +194,9 @@ const greeting = computed(() => {
 
 const summaryCards = [
   { label: 'Tugas Selesai', value: '6', tone: 'green', icon: 'done' },
-  { label: 'Tugas On Progress', value: '2', tone: 'blue', icon: 'progress' },
-  { label: 'Tugas Pending', value: '14', tone: 'orange', icon: 'pending' },
-  { label: 'Total Jam Kerja Minggu Ini', value: '32j 45m', tone: 'purple', icon: 'clock' }
+  { label: 'Tugas dalam Progres', value: '2', tone: 'blue', icon: 'progress' },
+  { label: 'Tugas Ditunda', value: '14', tone: 'orange', icon: 'pending' },
+  { label: 'Tugas Dibatalkan', value: '3', tone: 'red', icon: 'cancelled' }
 ]
 
 const recentTasks = [

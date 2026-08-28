@@ -120,6 +120,11 @@
   color: #685BC4;
 }
 
+.summary-icon.red {
+  background: rgba(220, 53, 69, .09);
+  color: #B92D3A;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
