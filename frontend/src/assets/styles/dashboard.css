@@ -24,12 +24,6 @@
   line-height: 1.2;
 }
 
-.employee-role {
-  margin: 6px 0 0;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 .attendance-clock {
   display: flex;
   align-items: center;
@@ -61,14 +55,6 @@
 
 .attendance-action .btn {
   min-width: 150px;
-}
-
-.attendance-meta {
-  display: grid;
-  gap: 2px;
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: 11px;
 }
 
 .summary-grid {

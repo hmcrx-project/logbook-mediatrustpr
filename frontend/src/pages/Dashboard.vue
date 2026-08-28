@@ -4,7 +4,6 @@
       <div class="employee-greeting">
         <p class="eyebrow">{{ greeting }},</p>
         <h2>{{ displayName }}</h2>
-        <p class="employee-role">Administrator</p>
       </div>
 
       <div class="attendance-clock">
@@ -14,12 +13,6 @@
         </div>
 
         <div class="attendance-action">
-          <div v-if="checkInTime" class="attendance-meta">
-            <span>Masuk {{ checkInTime }} WIB</span>
-            <span v-if="selectedWorkLocation">{{ selectedWorkLocation }}</span>
-            <span v-if="checkOutTime">Pulang {{ checkOutTime }} WIB</span>
-          </div>
-
           <BaseButton v-if="attendanceState === 'idle'" @click="openCheckInModal">
             Absen Masuk
           </BaseButton>
