@@ -44,25 +44,23 @@
         </label>
 
         <label class="task-filter-field">
-          <span>Bulan</span>
-          <select v-model.number="draftFilters.month" class="form-input">
-            <option v-for="month in months" :key="month.value" :value="month.value">
-              {{ month.label }}
-            </option>
+          <span>Tanggal</span>
+          <select v-model="draftFilters.dateRange" class="form-input">
+            <option value="all">Semua Tanggal</option>
+            <option value="yesterday">Kemarin</option>
+            <option value="last7">7 Hari Terakhir</option>
+            <option value="last30">30 Hari Terakhir</option>
           </select>
         </label>
 
-        <label class="task-filter-field">
-          <span>Tahun</span>
-          <select v-model.number="draftFilters.year" class="form-input">
-            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-          </select>
-        </label>
+        <div class="task-inline-actions">
+          <BaseButton @click="applyFilters">Filter</BaseButton>
+          <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+        </div>
       </div>
 
-      <div class="task-filter-actions">
-        <BaseButton @click="applyFilters">Filter</BaseButton>
-        <BaseButton variant="outline" @click="resetFilters">Reset Filter</BaseButton>
+      <div class="task-secondary-actions">
+        <BaseButton>Tambah Tugas</BaseButton>
         <BaseButton variant="outline" @click="exportToExcel">Export to Excel</BaseButton>
       </div>
     </section>
@@ -71,7 +69,7 @@
       <div class="tasks-table-heading">
         <div>
           <h2>Data Tugas</h2>
-          <p>{{ activeMonthLabel }} {{ activeFilters.year }}</p>
+          <p>{{ activeDateRangeLabel }}</p>
         </div>
         <span>{{ filteredTasks.length }} tugas</span>
       </div>
@@ -91,7 +89,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="task in filteredTasks" :key="task.id">
+            <tr v-for="task in paginatedTasks" :key="task.id">
               <td>{{ formatDate(task.date) }}</td>
               <td class="task-name-cell">{{ task.name }}</td>
               <td>{{ task.start || '-' }}</td>
@@ -111,12 +109,54 @@
           </tbody>
         </table>
       </div>
+
+      <div v-if="filteredTasks.length > 0" class="tasks-pagination">
+        <p>Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ filteredTasks.length }} tugas</p>
+
+        <div class="pagination-controls">
+          <button
+            type="button"
+            class="pagination-button"
+            :disabled="currentPage === 1"
+            aria-label="Halaman sebelumnya"
+            @click="changePage(currentPage - 1)"
+          >
+            ‹
+          </button>
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            type="button"
+            :class="['pagination-button', { active: page === currentPage }]"
+            @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+          <button
+            type="button"
+            class="pagination-button"
+            :disabled="currentPage === totalPages"
+            aria-label="Halaman berikutnya"
+            @click="changePage(currentPage + 1)"
+          >
+            ›
+          </button>
+
+          <label class="page-size-control">
+            <span>Tampilkan</span>
+            <select v-model.number="pageSize" class="form-input page-size-select" @change="resetPagination">
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </section>
   </section>
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import * as XLSX from 'xlsx'
 import BaseButton from '../components/BaseButton.vue'
 
@@ -124,13 +164,12 @@ const JAKARTA_TIME_ZONE = 'Asia/Jakarta'
 const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
   timeZone: JAKARTA_TIME_ZONE,
   year: 'numeric',
-  month: 'numeric',
-  day: 'numeric'
+  month: '2-digit',
+  day: '2-digit'
 }).formatToParts(new Date())
 
-const nowPart = (type) => Number(jakartaNowParts.find((part) => part.type === type)?.value || 0)
-const currentMonth = nowPart('month') || 1
-const currentYear = nowPart('year') || new Date().getFullYear()
+const nowPart = (type) => jakartaNowParts.find((part) => part.type === type)?.value || ''
+const currentDateIso = `${nowPart('year')}-${nowPart('month')}-${nowPart('day')}`
 
 const employees = [
   { id: 'emp-001', name: 'Admin MediatrustPR', position: 'Administrator' },
@@ -142,11 +181,6 @@ const employees = [
 ]
 
 const taskStatuses = ['Selesai', 'Progres', 'Ditunda', 'Dibatalkan']
-const months = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-].map((label, index) => ({ label, value: index + 1 }))
-const years = Array.from({ length: 16 }, (_, index) => currentYear - 10 + index)
 const positions = [...new Set(employees.map((employee) => employee.position))]
 
 const tasks = [
@@ -248,6 +282,105 @@ const tasks = [
     employeeId: 'emp-001',
     deadline: '2026-07-31',
     note: 'Rekap bulanan selesai.'
+  },
+  {
+    id: 'task-010',
+    date: '2026-08-28',
+    name: 'Review materi presentasi klien',
+    start: '16:10',
+    end: '',
+    status: 'Progres',
+    employeeId: 'emp-002',
+    deadline: '2026-08-29',
+    note: 'Finalisasi poin utama presentasi.'
+  },
+  {
+    id: 'task-011',
+    date: '2026-08-28',
+    name: 'Distribusi press release',
+    start: '14:20',
+    end: '15:05',
+    status: 'Selesai',
+    employeeId: 'emp-003',
+    deadline: '2026-08-28',
+    note: 'Distribusi ke media prioritas selesai.'
+  },
+  {
+    id: 'task-012',
+    date: '2026-08-28',
+    name: 'Verifikasi coverage campaign',
+    start: '11:40',
+    end: '13:10',
+    status: 'Selesai',
+    employeeId: 'emp-004',
+    deadline: '2026-08-28',
+    note: 'Coverage utama telah diverifikasi.'
+  },
+  {
+    id: 'task-013',
+    date: '2026-08-27',
+    name: 'Persiapan konten media sosial',
+    start: '15:20',
+    end: '',
+    status: 'Ditunda',
+    employeeId: 'emp-005',
+    deadline: '2026-08-29',
+    note: 'Menunggu persetujuan materi visual.'
+  },
+  {
+    id: 'task-014',
+    date: '2026-08-26',
+    name: 'Follow up media partner',
+    start: '10:10',
+    end: '11:00',
+    status: 'Selesai',
+    employeeId: 'emp-006',
+    deadline: '2026-08-26',
+    note: 'Konfirmasi publikasi telah diterima.'
+  },
+  {
+    id: 'task-015',
+    date: '2026-08-23',
+    name: 'Analisis sentimen pemberitaan',
+    start: '09:15',
+    end: '12:00',
+    status: 'Selesai',
+    employeeId: 'emp-004',
+    deadline: '2026-08-24',
+    note: 'Ringkasan sentimen selesai.'
+  },
+  {
+    id: 'task-016',
+    date: '2026-08-20',
+    name: 'Riset media untuk pitching',
+    start: '13:45',
+    end: '',
+    status: 'Progres',
+    employeeId: 'emp-003',
+    deadline: '2026-08-30',
+    note: 'Daftar media sedang diperluas.'
+  },
+  {
+    id: 'task-017',
+    date: '2026-08-18',
+    name: 'Revisi proposal komunikasi',
+    start: '10:30',
+    end: '12:10',
+    status: 'Selesai',
+    employeeId: 'emp-002',
+    deadline: '2026-08-18',
+    note: 'Proposal revisi sudah dikirim.'
+  },
+  {
+    id: 'task-018',
+    date: '2026-08-12',
+    name: 'Koordinasi agenda media visit',
+    start: '09:20',
+    end: '',
+    status: 'Dibatalkan',
+    employeeId: 'emp-006',
+    deadline: '2026-08-13',
+    note: 'Agenda dibatalkan dan akan dijadwalkan ulang.'
   }
 ]
 
@@ -256,40 +389,93 @@ const draftFilters = reactive({
   status: 'all',
   employee: 'all',
   position: 'all',
-  month: currentMonth,
-  year: currentYear
+  dateRange: 'all'
 })
 
 const activeFilters = reactive({ ...draftFilters })
+const currentPage = ref(1)
+const pageSize = ref(10)
 
-const activeMonthLabel = computed(() => (
-  months.find((month) => month.value === activeFilters.month)?.label || ''
-))
+const dateRangeLabels = {
+  all: 'Semua Tanggal',
+  yesterday: 'Kemarin',
+  last7: '7 Hari Terakhir',
+  last30: '30 Hari Terakhir'
+}
 
+const activeDateRangeLabel = computed(() => dateRangeLabels[activeFilters.dateRange] || 'Semua Tanggal')
 const employeeMap = computed(() => new Map(employees.map((employee) => [employee.id, employee])))
 
 const filteredTasks = computed(() => {
   const searchTerm = activeFilters.search.trim().toLowerCase()
 
-  return tasks.filter((task) => {
-    const taskDate = parseIsoDate(task.date)
-    const employee = employeeMap.value.get(task.employeeId)
-    const searchableText = [task.name, task.note, employee?.name].filter(Boolean).join(' ').toLowerCase()
+  return tasks
+    .filter((task) => {
+      const employee = employeeMap.value.get(task.employeeId)
+      const searchableText = [task.name, task.note, employee?.name].filter(Boolean).join(' ').toLowerCase()
 
-    const matchesSearch = !searchTerm || searchableText.includes(searchTerm)
-    const matchesStatus = activeFilters.status === 'all' || task.status === activeFilters.status
-    const matchesEmployee = activeFilters.employee === 'all' || task.employeeId === activeFilters.employee
-    const matchesPosition = activeFilters.position === 'all' || employee?.position === activeFilters.position
-    const matchesMonth = taskDate.month === activeFilters.month
-    const matchesYear = taskDate.year === activeFilters.year
+      const matchesSearch = !searchTerm || searchableText.includes(searchTerm)
+      const matchesStatus = activeFilters.status === 'all' || task.status === activeFilters.status
+      const matchesEmployee = activeFilters.employee === 'all' || task.employeeId === activeFilters.employee
+      const matchesPosition = activeFilters.position === 'all' || employee?.position === activeFilters.position
+      const matchesDate = matchesDateRange(task.date, activeFilters.dateRange)
 
-    return matchesSearch && matchesStatus && matchesEmployee && matchesPosition && matchesMonth && matchesYear
-  })
+      return matchesSearch && matchesStatus && matchesEmployee && matchesPosition && matchesDate
+    })
+    .sort((a, b) => taskTimestamp(b) - taskTimestamp(a))
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTasks.value.length / pageSize.value)))
+
+const paginatedTasks = computed(() => {
+  const safePage = Math.min(currentPage.value, totalPages.value)
+  const start = (safePage - 1) * pageSize.value
+  return filteredTasks.value.slice(start, start + pageSize.value)
+})
+
+const paginationStart = computed(() => {
+  if (!filteredTasks.value.length) return 0
+  return (currentPage.value - 1) * pageSize.value + 1
+})
+
+const paginationEnd = computed(() => Math.min(currentPage.value * pageSize.value, filteredTasks.value.length))
+
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)
+
+  let start = Math.max(1, currentPage.value - 2)
+  let end = Math.min(total, start + 4)
+  start = Math.max(1, end - 4)
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 })
 
 function parseIsoDate(value) {
   const [year, month, day] = String(value).split('-').map(Number)
   return { year, month, day }
+}
+
+function dateTimestamp(value) {
+  const { year, month, day } = parseIsoDate(value)
+  return Date.UTC(year, month - 1, day)
+}
+
+function taskTimestamp(task) {
+  const { year, month, day } = parseIsoDate(task.date)
+  const [hour, minute] = String(task.start || '00:00').split(':').map(Number)
+  return Date.UTC(year, month - 1, day, hour || 0, minute || 0)
+}
+
+function matchesDateRange(value, range) {
+  if (range === 'all') return true
+
+  const differenceDays = Math.floor((dateTimestamp(currentDateIso) - dateTimestamp(value)) / 86400000)
+
+  if (range === 'yesterday') return differenceDays === 1
+  if (range === 'last7') return differenceDays >= 0 && differenceDays < 7
+  if (range === 'last30') return differenceDays >= 0 && differenceDays < 30
+  return true
 }
 
 function formatDate(value) {
@@ -313,6 +499,7 @@ function statusClass(status) {
 
 function applyFilters() {
   Object.assign(activeFilters, draftFilters)
+  resetPagination()
 }
 
 function resetFilters() {
@@ -321,10 +508,18 @@ function resetFilters() {
     status: 'all',
     employee: 'all',
     position: 'all',
-    month: currentMonth,
-    year: currentYear
+    dateRange: 'all'
   })
   Object.assign(activeFilters, draftFilters)
+  resetPagination()
+}
+
+function resetPagination() {
+  currentPage.value = 1
+}
+
+function changePage(page) {
+  currentPage.value = Math.min(Math.max(page, 1), totalPages.value)
 }
 
 function handleTableWheel(event) {
@@ -370,8 +565,8 @@ function exportToExcel() {
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Tugas')
 
-  const safeMonth = activeMonthLabel.value.toLowerCase().replace(/\s+/g, '-')
-  XLSX.writeFile(workbook, `tugas-${safeMonth}-${activeFilters.year}.xlsx`)
+  const safeRange = activeDateRangeLabel.value.toLowerCase().replace(/\s+/g, '-')
+  XLSX.writeFile(workbook, `tugas-${safeRange}.xlsx`)
 }
 </script>
 

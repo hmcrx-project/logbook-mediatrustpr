@@ -37,11 +37,14 @@
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
           </select>
         </label>
+
+        <div class="filter-inline-actions">
+          <BaseButton @click="applyFilters">Filter</BaseButton>
+          <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+        </div>
       </div>
 
-      <div class="filter-actions">
-        <BaseButton @click="applyFilters">Filter</BaseButton>
-        <BaseButton variant="outline" @click="resetFilters">Reset Filter</BaseButton>
+      <div class="filter-secondary-actions">
         <BaseButton variant="outline" @click="exportToExcel">Export to Excel</BaseButton>
       </div>
     </section>

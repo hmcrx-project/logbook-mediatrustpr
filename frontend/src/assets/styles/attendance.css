@@ -10,7 +10,7 @@
 
 .filter-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 1.3fr) minmax(190px, 1fr) minmax(145px, .7fr) minmax(125px, .55fr);
+  grid-template-columns: minmax(200px, 1.25fr) minmax(175px, 1fr) minmax(130px, .65fr) minmax(115px, .55fr) auto;
   gap: 14px;
 }
 
@@ -30,14 +30,24 @@
   color: var(--text);
 }
 
-.filter-actions {
+.filter-inline-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: end;
+  gap: 8px;
+  padding-top: 19px;
 }
 
-.filter-actions .btn {
-  min-width: 112px;
+.filter-inline-actions .btn {
+  min-width: 78px;
+}
+
+.filter-secondary-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.filter-secondary-actions .btn {
+  min-width: 132px;
 }
 
 .attendance-table-card {
@@ -313,9 +323,13 @@
   min-width: 100px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1180px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-inline-actions {
+    padding-top: 0;
   }
 }
 
@@ -328,13 +342,19 @@
     grid-template-columns: 1fr;
   }
 
-  .filter-actions {
+  .filter-inline-actions,
+  .filter-secondary-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .filter-actions .btn {
+  .filter-inline-actions .btn,
+  .filter-secondary-actions .btn {
     min-width: 0;
+  }
+
+  .filter-secondary-actions {
+    grid-template-columns: 1fr;
   }
 
   .table-heading {
