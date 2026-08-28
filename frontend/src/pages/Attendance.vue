@@ -319,9 +319,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import * as XLSX from 'xlsx'
+import { useRoute } from 'vue-router'
 import BaseButton from '../components/BaseButton.vue'
+
+const route = useRoute()
 
 const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Jakarta',
@@ -454,6 +457,33 @@ function resetFilters() {
   })
   Object.assign(activeFilters, draftFilters)
   closeDetail()
+}
+
+function applyRouteFilters() {
+  const query = route.query || {}
+  const employeeId = Array.isArray(query.employee) ? query.employee[0] : query.employee
+  const position = Array.isArray(query.position) ? query.position[0] : query.position
+  const monthValue = Array.isArray(query.month) ? query.month[0] : query.month
+  const yearValue = Array.isArray(query.year) ? query.year[0] : query.year
+  const dayValue = Array.isArray(query.day) ? query.day[0] : query.day
+
+  const nextFilters = { ...draftFilters }
+  if (employeeId && employees.some((employee) => employee.id === employeeId)) nextFilters.employee = employeeId
+  if (position && positions.includes(position)) nextFilters.position = position
+
+  const parsedMonth = Number(monthValue)
+  const parsedYear = Number(yearValue)
+  if (Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12) nextFilters.month = parsedMonth
+  if (Number.isInteger(parsedYear) && years.includes(parsedYear)) nextFilters.year = parsedYear
+
+  Object.assign(draftFilters, nextFilters)
+  Object.assign(activeFilters, nextFilters)
+
+  const parsedDay = Number(dayValue)
+  if (nextFilters.employee !== 'all' && Number.isInteger(parsedDay) && parsedDay >= 1 && parsedDay <= daysInMonth.value.length) {
+    const employee = employees.find((item) => item.id === nextFilters.employee)
+    if (employee) openDetail(employee, parsedDay)
+  }
 }
 
 function getAttendance(employee, day) {
@@ -649,6 +679,8 @@ function exportToExcel() {
     compression: true
   })
 }
+
+onMounted(applyRouteFilters)
 </script>
 
 <style scoped>

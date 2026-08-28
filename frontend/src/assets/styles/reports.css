@@ -36,43 +36,6 @@
   min-width: 78px;
 }
 
-.report-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.report-summary-card {
-  min-height: 108px;
-  display: grid;
-  align-content: center;
-  gap: 8px;
-  padding: 18px 20px;
-  color: inherit;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.report-summary-card:hover,
-.report-summary-card:focus-visible {
-  border-color: rgba(27, 152, 213, .55);
-  outline: none;
-}
-
-.report-summary-card span {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.report-summary-card strong {
-  color: var(--heading);
-  font-size: 25px;
-  line-height: 1.05;
-}
-
 .report-chart-card {
   min-width: 0;
   overflow: hidden;
@@ -133,17 +96,45 @@
   font-size: 11px;
 }
 
-.report-area-path {
-  fill: url(#reportAreaGradient);
+.report-trend-heading {
+  align-items: center;
 }
+
+.report-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 16px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.report-series-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.report-series-dot.work { background: var(--primary); }
+.report-series-dot.task { background: var(--secondary); }
 
 .report-line-path {
   fill: none;
-  stroke: var(--primary);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+.report-line-path.work { stroke: var(--primary); }
+.report-line-path.task { stroke: var(--secondary); }
 
 .report-line-point-hit {
   fill: transparent;
@@ -151,12 +142,14 @@
 }
 
 .report-line-point {
-  fill: var(--primary);
   stroke: #fff;
   stroke-width: 3;
   cursor: pointer;
   transition: var(--transition);
 }
+
+.report-line-point.work { fill: var(--primary); }
+.report-line-point.task { fill: var(--secondary); }
 
 .report-line-point-control:hover .report-line-point,
 .report-line-point-control:focus .report-line-point {
@@ -552,10 +545,6 @@
 }
 
 @media (max-width: 1024px) {
-  .report-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .report-chart-grid-two {
     grid-template-columns: 1fr;
   }
@@ -594,25 +583,21 @@
     gap: 16px;
   }
 
-  .report-summary-grid {
-    gap: 10px;
-  }
-
-  .report-summary-card {
-    min-height: 96px;
-    padding: 15px;
-  }
-
-  .report-summary-card strong {
-    font-size: 21px;
-  }
-
   .report-card-heading,
   .report-modal-heading,
   .report-date-range-content,
   .report-modal-actions {
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  .report-trend-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .report-trend-legend {
+    justify-content: flex-start;
   }
 
   .report-line-chart-wrap {

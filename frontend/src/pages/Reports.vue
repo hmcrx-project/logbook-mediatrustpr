@@ -56,7 +56,6 @@
             <span>Tanggal</span>
             <span class="select-control">
               <select v-model="draftFilters.dateRange" class="form-input" @change="handleDateRangeSelection">
-                <option value="all">Semua Tanggal</option>
                 <option value="yesterday">Kemarin</option>
                 <option value="last7">7 Hari Terakhir</option>
                 <option value="last30">30 Hari Terakhir</option>
@@ -76,32 +75,16 @@
       </div>
     </section>
 
-    <section class="report-summary-grid" aria-label="Ringkasan laporan tugas">
-      <button type="button" class="report-summary-card card" @click="goToTasks()">
-        <span>Total Waktu Tugas</span>
-        <strong>{{ formatDuration(totalDurationMinutes) }}</strong>
-      </button>
-      <button type="button" class="report-summary-card card" @click="goToTasks()">
-        <span>Total Tugas</span>
-        <strong>{{ filteredTasks.length }}</strong>
-      </button>
-      <button type="button" class="report-summary-card card" @click="goToTasks({ status: 'Selesai' })">
-        <span>Tugas Selesai</span>
-        <strong>{{ statusCounts.Selesai }}</strong>
-      </button>
-      <button type="button" class="report-summary-card card" @click="goToTasks({ status: 'Progres' })">
-        <span>Tugas Progres</span>
-        <strong>{{ statusCounts.Progres }}</strong>
-      </button>
-    </section>
-
     <section class="report-chart-card card report-line-card">
-      <div class="report-card-heading">
+      <div class="report-card-heading report-trend-heading">
         <div>
-          <h2>Total Waktu Pengerjaan Tugas</h2>
-          <p>{{ activeDateRangeLabel }} · klik titik untuk membuka data tugas pada tanggal tersebut</p>
+          <h2>Tren Durasi Kerja dan Pengerjaan Tugas</h2>
+          <p>{{ activeDateRangeLabel }} · klik titik grafik untuk membuka data terkait</p>
         </div>
-        <strong>{{ formatDuration(totalDurationMinutes) }}</strong>
+        <div class="report-trend-legend" aria-label="Legenda grafik">
+          <span><i class="report-series-dot work"></i>Durasi Kerja</span>
+          <span><i class="report-series-dot task"></i>Waktu Pengerjaan Tugas</span>
+        </div>
       </div>
 
       <div class="report-line-chart-wrap">
@@ -109,15 +92,8 @@
           class="report-line-chart"
           :viewBox="`0 0 ${lineChart.width} ${lineChart.height}`"
           role="img"
-          aria-label="Grafik total waktu pengerjaan tugas per hari"
+          aria-label="Grafik tren durasi kerja dan waktu pengerjaan tugas per hari"
         >
-          <defs>
-            <linearGradient id="reportAreaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#1B98D5" stop-opacity="0.28" />
-              <stop offset="100%" stop-color="#1B98D5" stop-opacity="0.03" />
-            </linearGradient>
-          </defs>
-
           <g class="report-chart-grid">
             <template v-for="tick in lineChart.yTicks" :key="tick.value">
               <line
@@ -130,8 +106,8 @@
             </template>
           </g>
 
-          <path v-if="lineChart.points.length" class="report-area-path" :d="lineChart.areaPath" />
-          <path v-if="lineChart.points.length" class="report-line-path" :d="lineChart.linePath" />
+          <path v-if="lineChart.points.length" class="report-line-path work" :d="lineChart.workLinePath" />
+          <path v-if="lineChart.points.length" class="report-line-path task" :d="lineChart.taskLinePath" />
 
           <g v-for="point in lineChart.points" :key="point.date">
             <line
@@ -154,21 +130,28 @@
               class="report-line-point-control"
               role="button"
               tabindex="0"
-              :aria-label="`${point.label}: ${formatDuration(point.minutes)}. Buka data tugas.`"
+              :aria-label="`${point.label}: durasi kerja ${formatDuration(point.workMinutes)}. Buka data absensi.`"
+              @click="goToAttendance(point.date)"
+              @keyup.enter="goToAttendance(point.date)"
+              @keyup.space.prevent="goToAttendance(point.date)"
+            >
+              <title>{{ point.label }} · Durasi Kerja: {{ formatDuration(point.workMinutes) }}</title>
+              <circle class="report-line-point-hit" :cx="point.x" :cy="point.workY" r="13" />
+              <circle class="report-line-point work" :cx="point.x" :cy="point.workY" r="5" />
+            </g>
+
+            <g
+              class="report-line-point-control"
+              role="button"
+              tabindex="0"
+              :aria-label="`${point.label}: waktu pengerjaan tugas ${formatDuration(point.taskMinutes)}. Buka data tugas.`"
               @click="goToTasks({ date: point.date })"
               @keyup.enter="goToTasks({ date: point.date })"
               @keyup.space.prevent="goToTasks({ date: point.date })"
             >
-              <title>{{ point.label }} · {{ formatDuration(point.minutes) }}</title>
-              <circle class="report-line-point-hit" :cx="point.x" :cy="point.y" r="13" />
-              <circle class="report-line-point" :cx="point.x" :cy="point.y" r="5" />
-              <text
-                v-if="point.minutes > 0 && lineChart.points.length <= 10"
-                class="report-point-value"
-                :x="point.x"
-                :y="Math.max(16, point.y - 12)"
-                text-anchor="middle"
-              >{{ formatDurationCompact(point.minutes) }}</text>
+              <title>{{ point.label }} · Waktu Pengerjaan Tugas: {{ formatDuration(point.taskMinutes) }}</title>
+              <circle class="report-line-point-hit" :cx="point.x" :cy="point.taskY" r="13" />
+              <circle class="report-line-point task" :cx="point.x" :cy="point.taskY" r="5" />
             </g>
           </g>
         </svg>
@@ -179,7 +162,7 @@
       <section class="report-chart-card card">
         <div class="report-card-heading">
           <div>
-            <h2>Ringkasan Status Tugas</h2>
+            <h2>Status Tugas</h2>
             <p>{{ filteredTasks.length }} tugas pada periode aktif</p>
           </div>
         </div>
@@ -232,7 +215,7 @@
       <section class="report-chart-card card">
         <div class="report-card-heading">
           <div>
-            <h2>Total Waktu per Karyawan</h2>
+            <h2>Waktu Pengerjaan Tugas per Karyawan</h2>
             <p>Klik bar untuk membuka tugas karyawan tersebut</p>
           </div>
         </div>
@@ -349,11 +332,11 @@ const nowPart = (type) => jakartaNowParts.find((part) => part.type === type)?.va
 const currentDateIso = `${nowPart('year')}-${nowPart('month')}-${nowPart('day')}`
 
 const employees = [
-  { id: 'emp-002', name: 'Andi Pratama', position: 'Account Executive' },
-  { id: 'emp-003', name: 'Sinta Maharani', position: 'Media Relations' },
-  { id: 'emp-004', name: 'Raka Putra', position: 'Monitoring Analyst' },
-  { id: 'emp-005', name: 'Nadia Rahma', position: 'Content Specialist' },
-  { id: 'emp-006', name: 'Dimas Saputra', position: 'Account Executive' }
+  { id: 'emp-002', name: 'Andi Pratama', position: 'Account Executive', attendanceIndex: 1 },
+  { id: 'emp-003', name: 'Sinta Maharani', position: 'Media Relations', attendanceIndex: 2 },
+  { id: 'emp-004', name: 'Raka Putra', position: 'Monitoring Analyst', attendanceIndex: 3 },
+  { id: 'emp-005', name: 'Nadia Rahma', position: 'Content Specialist', attendanceIndex: 4 },
+  { id: 'emp-006', name: 'Dimas Saputra', position: 'Account Executive', attendanceIndex: 5 }
 ]
 const positions = [...new Set(employees.map((employee) => employee.position))].sort((a, b) => a.localeCompare(b, 'id'))
 const employeeMap = new Map(employees.map((employee) => [employee.id, employee]))
@@ -397,7 +380,6 @@ const tempCustomRange = reactive({ start: '', end: '' })
 const calendarAnchor = ref(createUtcDate(Number(nowPart('year')), Number(nowPart('month')) - 1, 1))
 
 const dateRangeLabels = {
-  all: 'Semua Tanggal',
   yesterday: 'Kemarin',
   last7: '7 Hari Terakhir',
   last30: '30 Hari Terakhir'
@@ -426,22 +408,33 @@ const filteredTasks = computed(() => {
   return reportTasks.filter((task) => taskIds.has(task.id))
 })
 
-const totalDurationMinutes = computed(() => filteredSessions.value.reduce((total, session) => total + sessionDurationMinutes(session), 0))
 const statusCounts = computed(() => Object.fromEntries(taskStatuses.map((status) => [status, filteredTasks.value.filter((task) => task.status === status).length])))
 
 const dateSeries = computed(() => {
   const dates = datesForActiveRange(activeFilters)
-  const totals = new Map(dates.map((date) => [date, 0]))
+  const taskTotals = new Map(dates.map((date) => [date, 0]))
+
   filteredSessions.value.forEach((session) => {
-    if (!totals.has(session.date)) totals.set(session.date, 0)
-    totals.set(session.date, totals.get(session.date) + sessionDurationMinutes(session))
+    if (!taskTotals.has(session.date)) taskTotals.set(session.date, 0)
+    taskTotals.set(session.date, taskTotals.get(session.date) + sessionDurationMinutes(session))
   })
-  return [...totals.entries()]
-    .sort(([a], [b]) => dateTimestamp(a) - dateTimestamp(b))
-    .map(([date, minutes]) => ({ date, minutes, label: formatDateLong(date), shortLabel: formatDateShort(date) }))
+
+  const scopedEmployees = employees.filter((employee) => {
+    if (activeFilters.employee !== 'all' && employee.id !== activeFilters.employee) return false
+    if (activeFilters.position !== 'all' && employee.position !== activeFilters.position) return false
+    return true
+  })
+
+  return dates.map((date) => ({
+    date,
+    taskMinutes: taskTotals.get(date) || 0,
+    workMinutes: scopedEmployees.reduce((total, employee) => total + attendanceDurationMinutes(employee, date), 0),
+    label: formatDateLong(date),
+    shortLabel: formatDateShort(date)
+  }))
 })
 
-const lineChart = computed(() => buildLineChart(dateSeries.value))
+const lineChart = computed(() => buildDualLineChart(dateSeries.value))
 
 const donutSegments = computed(() => {
   const total = filteredTasks.value.length || 1
@@ -507,7 +500,6 @@ function addMonths(date, amount) {
 }
 
 function matchesDateRange(value, filters) {
-  if (filters.dateRange === 'all') return true
   const valueTime = dateTimestamp(value)
   const differenceDays = Math.floor((dateTimestamp(currentDateIso) - valueTime) / 86400000)
   if (filters.dateRange === 'yesterday') return differenceDays === 1
@@ -522,10 +514,7 @@ function matchesDateRange(value, filters) {
 function datesForActiveRange(filters) {
   let start = currentDateIso
   let end = currentDateIso
-  if (filters.dateRange === 'all') {
-    const sessionDates = reportTasks.flatMap((task) => task.sessions.map((session) => session.date))
-    start = sessionDates.sort((a, b) => dateTimestamp(a) - dateTimestamp(b))[0] || currentDateIso
-  } else if (filters.dateRange === 'yesterday') {
+  if (filters.dateRange === 'yesterday') {
     start = addDaysIso(currentDateIso, -1)
     end = start
   } else if (filters.dateRange === 'last7') {
@@ -556,6 +545,17 @@ function sessionDurationMinutes(session) {
   const end = timeToMinutes(session.end)
   if (start === null || end === null || end <= start) return 0
   return end - start
+}
+
+function attendanceDurationMinutes(employee, dateIso) {
+  const { year, month, day } = parseIsoDate(dateIso)
+  const date = createUtcDate(year, month - 1, day)
+  const weekday = date.getUTCDay()
+  if (weekday === 0 || weekday === 6) return 0
+
+  const seed = year + month * 17 + day * 11 + employee.attendanceIndex * 7
+  if (seed % 13 === 0) return 0
+  return 7 * 60 + 35 + (seed % 64)
 }
 
 function formatDuration(minutes) {
@@ -592,14 +592,14 @@ function formatDateLong(value) {
   return `${String(day).padStart(2, '0')} ${monthLabel} ${year}`
 }
 
-function buildLineChart(series) {
+function buildDualLineChart(series) {
   const width = 920
   const height = 300
   const plotLeft = 58
   const plotRight = width - 24
   const plotTop = 28
   const plotBottom = height - 52
-  const maxMinutes = Math.max(...series.map((item) => item.minutes), 0)
+  const maxMinutes = Math.max(...series.flatMap((item) => [item.workMinutes, item.taskMinutes]), 0)
   const maxHours = Math.max(1, Math.ceil(maxMinutes / 60))
   const yMax = maxHours * 60
   const xStep = series.length > 1 ? (plotRight - plotLeft) / (series.length - 1) : 0
@@ -608,14 +608,14 @@ function buildLineChart(series) {
   const points = series.map((item, index) => ({
     ...item,
     x: series.length === 1 ? (plotLeft + plotRight) / 2 : plotLeft + xStep * index,
-    y: plotBottom - (item.minutes / yMax) * (plotBottom - plotTop),
+    workY: plotBottom - (item.workMinutes / yMax) * (plotBottom - plotTop),
+    taskY: plotBottom - (item.taskMinutes / yMax) * (plotBottom - plotTop),
     showLabel: series.length <= 10 || index % labelEvery === 0 || index === series.length - 1
   }))
 
-  const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ')
-  const areaPath = points.length
-    ? `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${plotBottom} L ${points[0].x.toFixed(2)} ${plotBottom} Z`
-    : ''
+  const makeLinePath = (yKey) => points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point[yKey].toFixed(2)}`)
+    .join(' ')
 
   const yTicks = Array.from({ length: 5 }, (_, index) => {
     const ratio = index / 4
@@ -627,7 +627,18 @@ function buildLineChart(series) {
     }
   })
 
-  return { width, height, plotLeft, plotRight, plotTop, plotBottom, points, linePath, areaPath, yTicks }
+  return {
+    width,
+    height,
+    plotLeft,
+    plotRight,
+    plotTop,
+    plotBottom,
+    points,
+    workLinePath: makeLinePath('workY'),
+    taskLinePath: makeLinePath('taskY'),
+    yTicks
+  }
 }
 
 function buildCalendarMonth(anchor) {
@@ -735,6 +746,14 @@ function taskNavigationQuery(overrides = {}) {
     query.customEnd = overrides.date
   }
   return query
+}
+
+function goToAttendance(date) {
+  const { year, month, day } = parseIsoDate(date)
+  const query = { year: String(year), month: String(month), day: String(day) }
+  if (activeFilters.employee !== 'all') query.employee = activeFilters.employee
+  if (activeFilters.position !== 'all') query.position = activeFilters.position
+  router.push({ path: '/absensi', query })
 }
 
 function goToTasks(overrides = {}) {
