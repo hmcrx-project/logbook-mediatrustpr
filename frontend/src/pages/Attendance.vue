@@ -86,14 +86,7 @@
       </div>
 
       <div class="filter-secondary-actions">
-        <BaseButton class="attendance-add-button" @click="openAddAttendance">
-          <span class="attendance-action-label">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path d="M10 4v12M4 10h12" stroke-linecap="round" />
-            </svg>
-            <span>Tambah Absensi</span>
-          </span>
-        </BaseButton>
+        <BaseButton class="attendance-add-button" @click="openAddAttendance">Tambah Absensi</BaseButton>
         <BaseButton variant="outline" @click="exportToExcel">Export to Excel</BaseButton>
       </div>
     </section>
@@ -201,7 +194,7 @@
                 <input
                   v-model="addAttendanceForm.checkOut"
                   type="time"
-                  :class="['form-input', { 'is-error': addAttendanceSubmitted && isAddCheckoutInvalid }]"
+                  :class="['form-input', { 'is-error': addAttendanceSubmitted && (!addAttendanceForm.checkOut || isAddCheckoutInvalid) }]"
                 />
               </label>
             </div>
@@ -213,6 +206,7 @@
                   v-model="addAttendanceForm.workLocation"
                   :class="['form-input', { 'is-error': addAttendanceSubmitted && !addAttendanceForm.workLocation }]"
                 >
+                  <option value="" disabled>Pilih WFO atau WFH</option>
                   <option value="WFO">WFO</option>
                   <option value="WFH">WFH</option>
                 </select>
@@ -384,7 +378,7 @@ const addAttendanceForm = reactive({
   date: currentDateInput,
   checkIn: '',
   checkOut: '',
-  workLocation: 'WFO'
+  workLocation: ''
 })
 
 const activeMonthLabel = computed(() => months.find((month) => month.value === activeFilters.month)?.label || '')
@@ -580,7 +574,7 @@ function openAddAttendance() {
     date: currentDateInput,
     checkIn: '',
     checkOut: '',
-    workLocation: 'WFO'
+    workLocation: ''
   })
   addAttendanceSubmitted.value = false
   isAddAttendanceOpen.value = true
@@ -598,6 +592,7 @@ function saveAddedAttendance() {
     !addAttendanceForm.employeeId ||
     !addAttendanceForm.date ||
     !addAttendanceForm.checkIn ||
+    !addAttendanceForm.checkOut ||
     !addAttendanceForm.workLocation ||
     isAddCheckoutInvalid.value
   ) return
@@ -606,8 +601,8 @@ function saveAddedAttendance() {
   if (!year || !month || !day) return
 
   const checkInMinutes = timeToMinutes(addAttendanceForm.checkIn)
-  const checkOutMinutes = addAttendanceForm.checkOut ? timeToMinutes(addAttendanceForm.checkOut) : null
-  const durationMinutes = checkOutMinutes === null ? null : checkOutMinutes - checkInMinutes
+  const checkOutMinutes = timeToMinutes(addAttendanceForm.checkOut)
+  const durationMinutes = checkOutMinutes - checkInMinutes
 
   const key = getAttendanceKey(addAttendanceForm.employeeId, day, year, month)
   attendanceOverrides[key] = {
