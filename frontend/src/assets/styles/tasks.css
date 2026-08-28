@@ -746,8 +746,11 @@
 }
 
 .task-delete-button.btn-outline {
+  min-height: 44px;
+  flex-shrink: 0;
   border-color: rgba(220, 53, 69, .55);
   color: var(--error);
+  white-space: nowrap;
 }
 
 .task-delete-button.btn-outline:hover {
@@ -1027,9 +1030,16 @@
     width: 100%;
   }
 
-  .task-modal-actions-right .btn,
+  .task-modal-actions-right .btn {
+    flex: 1 1 0;
+    min-height: 44px;
+  }
+
   .task-delete-button {
-    flex: 1;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    flex: 0 0 44px;
   }
 
   .selected-range-summary {

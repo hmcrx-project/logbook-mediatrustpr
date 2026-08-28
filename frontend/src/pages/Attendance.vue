@@ -86,6 +86,14 @@
       </div>
 
       <div class="filter-secondary-actions">
+        <BaseButton class="attendance-add-button" @click="openAddAttendance">
+          <span class="attendance-action-label">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" stroke-linecap="round" />
+            </svg>
+            <span>Tambah Absensi</span>
+          </span>
+        </BaseButton>
         <BaseButton variant="outline" @click="exportToExcel">Export to Excel</BaseButton>
       </div>
     </section>
@@ -135,6 +143,94 @@
       </div>
     </section>
 
+    <div v-if="isAddAttendanceOpen" class="attendance-detail-backdrop" @click.self="closeAddAttendance">
+      <section class="attendance-detail-modal attendance-add-modal" role="dialog" aria-modal="true" aria-labelledby="attendance-add-title">
+        <div class="detail-modal-heading">
+          <div>
+            <h3 id="attendance-add-title">Tambah Absensi</h3>
+            <p>Tambahkan data absensi karyawan secara manual.</p>
+          </div>
+          <button type="button" class="modal-close-button" aria-label="Tutup" @click="closeAddAttendance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <form class="attendance-add-form" @submit.prevent="saveAddedAttendance">
+          <div class="attendance-add-form-content">
+            <label class="attendance-add-field">
+              <span>Nama Karyawan</span>
+              <span class="select-control">
+                <select
+                  v-model="addAttendanceForm.employeeId"
+                  :class="['form-input', { 'is-error': addAttendanceSubmitted && !addAttendanceForm.employeeId }]"
+                >
+                  <option value="" disabled>Pilih karyawan</option>
+                  <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                    {{ employee.name }}
+                  </option>
+                </select>
+                <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </label>
+
+            <label class="attendance-add-field">
+              <span>Tanggal</span>
+              <input
+                v-model="addAttendanceForm.date"
+                type="date"
+                :class="['form-input', { 'is-error': addAttendanceSubmitted && !addAttendanceForm.date }]"
+              />
+            </label>
+
+            <div class="attendance-add-time-grid">
+              <label class="attendance-add-field">
+                <span>Absen Masuk</span>
+                <input
+                  v-model="addAttendanceForm.checkIn"
+                  type="time"
+                  :class="['form-input', { 'is-error': addAttendanceSubmitted && !addAttendanceForm.checkIn }]"
+                />
+              </label>
+
+              <label class="attendance-add-field">
+                <span>Absen Pulang</span>
+                <input
+                  v-model="addAttendanceForm.checkOut"
+                  type="time"
+                  :class="['form-input', { 'is-error': addAttendanceSubmitted && isAddCheckoutInvalid }]"
+                />
+              </label>
+            </div>
+
+            <label class="attendance-add-field">
+              <span>Lokasi Kerja</span>
+              <span class="select-control">
+                <select
+                  v-model="addAttendanceForm.workLocation"
+                  :class="['form-input', { 'is-error': addAttendanceSubmitted && !addAttendanceForm.workLocation }]"
+                >
+                  <option value="WFO">WFO</option>
+                  <option value="WFH">WFH</option>
+                </select>
+                <svg class="select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </label>
+          </div>
+
+          <div class="detail-modal-actions">
+            <BaseButton type="button" variant="outline" @click="closeAddAttendance">Batal</BaseButton>
+            <BaseButton type="submit">Simpan</BaseButton>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <div v-if="selectedDetail" class="attendance-detail-backdrop" @click.self="closeDetail">
       <section class="attendance-detail-modal" role="dialog" aria-modal="true" aria-labelledby="attendance-detail-title">
         <div class="detail-modal-heading">
@@ -162,7 +258,7 @@
             </div>
             <div class="detail-row">
               <span>Absen Pulang</span>
-              <strong>{{ selectedDetail.attendance.checkOut }} WIB</strong>
+              <strong>{{ selectedDetail.attendance.checkOut ? `${selectedDetail.attendance.checkOut} WIB` : '-' }}</strong>
             </div>
             <div class="detail-row">
               <span>Lokasi Kerja</span>
@@ -188,7 +284,7 @@
               <input
                 v-model="editForm.checkOut"
                 type="time"
-                :class="['form-input', { 'is-error': editSubmitted && (!editForm.checkOut || editDurationMinutes === null) }]"
+                :class="['form-input', { 'is-error': editSubmitted && isEditCheckoutInvalid }]"
               />
             </label>
             <label class="detail-edit-field">
@@ -243,6 +339,8 @@ const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
 const nowPart = (type) => Number(jakartaNowParts.find((part) => part.type === type)?.value || 0)
 const currentMonth = nowPart('month') || 1
 const currentYear = nowPart('year') || new Date().getFullYear()
+const currentDay = nowPart('day') || 1
+const currentDateInput = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`
 
 const employees = [
   { id: 'emp-001', name: 'Admin MediatrustPR', position: 'Administrator' },
@@ -273,8 +371,17 @@ const isFilterExpanded = ref(false)
 const selectedDetail = ref(null)
 const isEditingDetail = ref(false)
 const editSubmitted = ref(false)
+const isAddAttendanceOpen = ref(false)
+const addAttendanceSubmitted = ref(false)
 const attendanceOverrides = reactive({})
 const editForm = reactive({
+  checkIn: '',
+  checkOut: '',
+  workLocation: 'WFO'
+})
+const addAttendanceForm = reactive({
+  employeeId: '',
+  date: currentDateInput,
   checkIn: '',
   checkOut: '',
   workLocation: 'WFO'
@@ -323,6 +430,22 @@ const editDurationLabel = computed(() => (
   editDurationMinutes.value === null ? '-' : formatDuration(editDurationMinutes.value)
 ))
 
+const isEditCheckoutInvalid = computed(() => {
+  if (!editForm.checkOut) return false
+
+  const checkIn = timeToMinutes(editForm.checkIn)
+  const checkOut = timeToMinutes(editForm.checkOut)
+  return checkIn === null || checkOut === null || checkOut <= checkIn
+})
+
+const isAddCheckoutInvalid = computed(() => {
+  if (!addAttendanceForm.checkOut) return false
+
+  const checkIn = timeToMinutes(addAttendanceForm.checkIn)
+  const checkOut = timeToMinutes(addAttendanceForm.checkOut)
+  return checkIn === null || checkOut === null || checkOut <= checkIn
+})
+
 function applyFilters() {
   Object.assign(activeFilters, draftFilters)
   closeDetail()
@@ -366,8 +489,8 @@ function getAttendance(employee, day) {
 }
 
 
-function getAttendanceKey(employeeId, day) {
-  return `${activeFilters.year}-${activeFilters.month}-${day}-${employeeId}`
+function getAttendanceKey(employeeId, day, year = activeFilters.year, month = activeFilters.month) {
+  return `${year}-${month}-${day}-${employeeId}`
 }
 
 function minutesToTime(totalMinutes) {
@@ -392,6 +515,8 @@ function formatAttendanceRange(attendance) {
 }
 
 function formatDuration(minutes) {
+  if (!Number.isFinite(minutes)) return '-'
+
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
   return `${hours}j ${String(remainingMinutes).padStart(2, '0')}m`
@@ -427,13 +552,13 @@ function saveDetail() {
   if (!selectedDetail.value) return
 
   editSubmitted.value = true
-  if (!editForm.checkIn || !editForm.checkOut || !editForm.workLocation || editDurationMinutes.value === null) return
+  if (!editForm.checkIn || !editForm.workLocation || isEditCheckoutInvalid.value) return
 
   const updatedAttendance = {
     checkIn: editForm.checkIn,
     checkOut: editForm.checkOut,
     workLocation: editForm.workLocation,
-    durationMinutes: editDurationMinutes.value
+    durationMinutes: editForm.checkOut ? editDurationMinutes.value : null
   }
 
   const key = getAttendanceKey(selectedDetail.value.employee.id, selectedDetail.value.day)
@@ -447,6 +572,60 @@ function closeDetail() {
   selectedDetail.value = null
   isEditingDetail.value = false
   editSubmitted.value = false
+}
+
+function openAddAttendance() {
+  Object.assign(addAttendanceForm, {
+    employeeId: '',
+    date: currentDateInput,
+    checkIn: '',
+    checkOut: '',
+    workLocation: 'WFO'
+  })
+  addAttendanceSubmitted.value = false
+  isAddAttendanceOpen.value = true
+}
+
+function closeAddAttendance() {
+  isAddAttendanceOpen.value = false
+  addAttendanceSubmitted.value = false
+}
+
+function saveAddedAttendance() {
+  addAttendanceSubmitted.value = true
+
+  if (
+    !addAttendanceForm.employeeId ||
+    !addAttendanceForm.date ||
+    !addAttendanceForm.checkIn ||
+    !addAttendanceForm.workLocation ||
+    isAddCheckoutInvalid.value
+  ) return
+
+  const [year, month, day] = addAttendanceForm.date.split('-').map(Number)
+  if (!year || !month || !day) return
+
+  const checkInMinutes = timeToMinutes(addAttendanceForm.checkIn)
+  const checkOutMinutes = addAttendanceForm.checkOut ? timeToMinutes(addAttendanceForm.checkOut) : null
+  const durationMinutes = checkOutMinutes === null ? null : checkOutMinutes - checkInMinutes
+
+  const key = getAttendanceKey(addAttendanceForm.employeeId, day, year, month)
+  attendanceOverrides[key] = {
+    checkIn: addAttendanceForm.checkIn,
+    checkOut: addAttendanceForm.checkOut,
+    durationMinutes,
+    workLocation: addAttendanceForm.workLocation
+  }
+
+  if (activeFilters.year !== year || activeFilters.month !== month) {
+    activeFilters.year = year
+    activeFilters.month = month
+    draftFilters.year = year
+    draftFilters.month = month
+  }
+
+  closeDetail()
+  closeAddAttendance()
 }
 
 function exportToExcel() {
