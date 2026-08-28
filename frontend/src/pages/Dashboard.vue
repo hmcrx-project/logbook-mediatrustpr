@@ -151,9 +151,9 @@ const greeting = computed(() => {
 })
 
 const summaryCards = [
-  { label: 'Belum Selesai', value: '6', helper: 'tugas', tone: 'blue', icon: 'open' },
-  { label: 'Pending', value: '2', helper: 'tugas', tone: 'orange', icon: 'pending' },
-  { label: 'Selesai', value: '14', helper: 'tugas', tone: 'green', icon: 'done' },
+  { label: 'Selesai', value: '6', helper: 'tugas', tone: 'blue', icon: 'open' },
+  { label: 'On Progress', value: '2', helper: 'tugas', tone: 'orange', icon: 'pending' },
+  { label: 'Pending', value: '14', helper: 'tugas', tone: 'green', icon: 'done' },
   { label: 'Jam Kerja Minggu Ini', value: '32j 45m', helper: 'total', tone: 'purple', icon: 'clock' }
 ]
 
