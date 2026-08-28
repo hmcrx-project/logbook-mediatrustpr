@@ -72,7 +72,7 @@
           <h2>Data Tugas</h2>
           <p>{{ activeDateRangeLabel }}</p>
         </div>
-        <span>{{ filteredTasks.length }} tugas</span>
+        <span>{{ filteredTaskRows.length }} catatan</span>
       </div>
 
       <div class="tasks-table-scroll">
@@ -90,33 +90,38 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="task in paginatedTasks" :key="task.id">
-              <td>{{ formatDate(task.date) }}</td>
+            <tr v-for="row in paginatedTaskRows" :key="`${row.taskId}-${row.sessionId}`">
+              <td>{{ formatDate(row.date) }}</td>
               <td class="task-name-cell">
-                <button type="button" class="task-name-button" @click="openTaskDetail(task)">
-                  {{ task.name }}
+                <button type="button" class="task-name-button" @click="openTaskDetail(row)">
+                  {{ row.name }}
                 </button>
               </td>
-              <td>{{ task.start || '-' }}</td>
-              <td>{{ task.end || '-' }}</td>
+              <td>{{ row.start || '-' }}</td>
+              <td>{{ row.end || '-' }}</td>
               <td>
-                <span :class="['task-status-badge', statusClass(task.status)]">
-                  {{ task.status }}
-                </span>
+                <select
+                  :value="row.status"
+                  :class="['task-status-select', statusClass(row.status)]"
+                  :aria-label="`Ubah status ${row.name}`"
+                  @change="updateTaskStatus(row.taskId, $event.target.value)"
+                >
+                  <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
+                </select>
               </td>
-              <td class="assignee-cell">{{ employeeName(task.employeeId) }}</td>
-              <td>{{ formatDate(task.deadline) }}</td>
-              <td class="note-cell">{{ task.note || '-' }}</td>
+              <td class="assignee-cell">{{ employeeName(row.employeeId) }}</td>
+              <td>{{ formatDate(row.deadline) }}</td>
+              <td class="note-cell">{{ row.note || '-' }}</td>
             </tr>
-            <tr v-if="filteredTasks.length === 0">
+            <tr v-if="filteredTaskRows.length === 0">
               <td colspan="8" class="tasks-empty-state">Tidak ada data tugas sesuai filter.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div v-if="filteredTasks.length > 0" class="tasks-pagination">
-        <p>Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ filteredTasks.length }} tugas</p>
+      <div v-if="filteredTaskRows.length > 0" class="tasks-pagination">
+        <p>Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ filteredTaskRows.length }} catatan</p>
 
         <div class="pagination-controls">
           <button
@@ -175,20 +180,8 @@
 
         <div v-if="taskModalMode === 'view' && selectedTask" class="task-detail-content">
           <div class="task-detail-row">
-            <span>Tanggal</span>
-            <strong>{{ formatDate(selectedTask.date) }}</strong>
-          </div>
-          <div class="task-detail-row">
             <span>Nama Tugas</span>
             <strong>{{ selectedTask.name }}</strong>
-          </div>
-          <div class="task-detail-row">
-            <span>Mulai</span>
-            <strong>{{ selectedTask.start || '-' }}</strong>
-          </div>
-          <div class="task-detail-row">
-            <span>Selesai</span>
-            <strong>{{ selectedTask.end || '-' }}</strong>
           </div>
           <div class="task-detail-row">
             <span>Status</span>
@@ -208,6 +201,53 @@
             <span>Catatan</span>
             <strong>{{ selectedTask.note || '-' }}</strong>
           </div>
+
+          <section class="task-sessions-section">
+            <div class="task-sessions-heading">
+              <div>
+                <span>Waktu Pengerjaan</span>
+                <small>{{ selectedTask.sessions.length }} sesi</small>
+              </div>
+              <button type="button" class="session-add-button" @click="openAddSession">+ Tambahkan Jam</button>
+            </div>
+
+            <div class="task-session-list">
+              <div v-for="session in selectedTaskSessionsSorted" :key="session.id" class="task-session-item">
+                <div class="task-session-summary">
+                  <strong>{{ formatDate(session.date) }}</strong>
+                  <span>{{ session.start || '-' }} - {{ session.end || '-' }}</span>
+                </div>
+                <div class="task-session-actions">
+                  <button type="button" @click="startEditSession(session)">Edit</button>
+                  <button type="button" class="danger" @click="openDeleteSessionConfirm(session)">Hapus</button>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="sessionEditorMode" class="task-session-editor">
+              <div class="task-session-editor-grid">
+                <label class="task-form-field">
+                  <span>Tanggal</span>
+                  <input v-model="sessionForm.date" type="date" class="form-input" />
+                </label>
+                <label class="task-form-field">
+                  <span>Jam Mulai</span>
+                  <input v-model="sessionForm.start" type="time" class="form-input" />
+                </label>
+                <label class="task-form-field">
+                  <span>Jam Selesai</span>
+                  <input v-model="sessionForm.end" type="time" class="form-input" />
+                </label>
+              </div>
+              <p v-if="sessionFormError" class="task-form-error">{{ sessionFormError }}</p>
+              <div class="task-session-editor-actions">
+                <BaseButton variant="outline" @click="cancelSessionEditor">Batal</BaseButton>
+                <BaseButton @click="saveSession">{{ sessionEditorMode === 'add' ? 'Tambahkan' : 'Simpan' }}</BaseButton>
+              </div>
+            </div>
+
+            <p v-if="taskDetailError" class="task-form-error task-detail-error">{{ taskDetailError }}</p>
+          </section>
         </div>
 
         <form v-else class="task-form" @submit.prevent="saveTask">
@@ -217,25 +257,10 @@
           </label>
 
           <label class="task-form-field">
-            <span>Tanggal</span>
-            <input v-model="taskForm.date" type="date" class="form-input" />
-          </label>
-
-          <label class="task-form-field">
             <span>Status</span>
             <select v-model="taskForm.status" class="form-input">
               <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
             </select>
-          </label>
-
-          <label class="task-form-field">
-            <span>Mulai</span>
-            <input v-model="taskForm.start" type="time" class="form-input" />
-          </label>
-
-          <label class="task-form-field">
-            <span>Selesai</span>
-            <input v-model="taskForm.end" type="time" class="form-input" />
           </label>
 
           <label class="task-form-field">
@@ -257,6 +282,34 @@
             <span>Catatan</span>
             <textarea v-model.trim="taskForm.note" class="form-input task-note-input" rows="4" placeholder="Tambahkan catatan tugas"></textarea>
           </label>
+
+          <section class="task-form-sessions task-form-field-wide">
+            <div class="task-sessions-heading">
+              <div>
+                <span>Waktu Pengerjaan</span>
+                <small>Setiap waktu pengerjaan akan tampil sebagai satu baris di tabel.</small>
+              </div>
+              <button type="button" class="session-add-button" @click="addTaskFormSession">+ Tambahkan Jam</button>
+            </div>
+
+            <div class="task-form-session-list">
+              <div v-for="(session, index) in taskForm.sessions" :key="session.id || index" class="task-form-session-row">
+                <label class="task-form-field">
+                  <span>Tanggal</span>
+                  <input v-model="session.date" type="date" class="form-input" />
+                </label>
+                <label class="task-form-field">
+                  <span>Jam Mulai</span>
+                  <input v-model="session.start" type="time" class="form-input" />
+                </label>
+                <label class="task-form-field">
+                  <span>Jam Selesai</span>
+                  <input v-model="session.end" type="time" class="form-input" />
+                </label>
+                <button type="button" class="task-form-session-remove" :disabled="taskForm.sessions.length === 1" @click="removeTaskFormSession(index)">Hapus</button>
+              </div>
+            </div>
+          </section>
 
           <p v-if="taskFormError" class="task-form-error task-form-field-wide">{{ taskFormError }}</p>
         </form>
@@ -280,12 +333,12 @@
     <div v-if="isDeleteConfirmOpen" class="task-confirm-backdrop" @click.self="closeDeleteConfirm">
       <section class="task-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-task-title">
         <div class="task-confirm-content">
-          <h3 id="delete-task-title">Hapus Tugas?</h3>
-          <p>Tugas yang dihapus akan hilang dari tabel mock saat ini.</p>
+          <h3 id="delete-task-title">{{ deleteConfirmTitle }}</h3>
+          <p>{{ deleteConfirmMessage }}</p>
         </div>
         <div class="task-confirm-actions">
           <BaseButton variant="outline" @click="closeDeleteConfirm">Batal</BaseButton>
-          <BaseButton class="task-delete-confirm-button" @click="confirmDeleteTask">Hapus</BaseButton>
+          <BaseButton class="task-delete-confirm-button" @click="confirmDeleteTarget">Hapus</BaseButton>
         </div>
       </section>
     </div>
@@ -391,7 +444,7 @@ const taskStatuses = ['Selesai', 'Progres', 'Ditunda', 'Dibatalkan']
 const positions = [...new Set(employees.map((employee) => employee.position))]
 const weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 
-const tasks = ref([
+const legacyTasks = [
   { id: 'task-001', date: '2026-08-28', name: 'Media monitoring harian', start: '08:45', end: '10:15', status: 'Selesai', employeeId: 'emp-004', deadline: '2026-08-28', note: 'Laporan monitoring sudah dikirim.' },
   { id: 'task-002', date: '2026-08-28', name: 'Update database media', start: '10:30', end: '', status: 'Progres', employeeId: 'emp-003', deadline: '2026-08-29', note: 'Melengkapi kontak media nasional.' },
   { id: 'task-003', date: '2026-08-27', name: 'Draft laporan campaign', start: '13:15', end: '', status: 'Ditunda', employeeId: 'emp-002', deadline: '2026-08-30', note: 'Menunggu data coverage tambahan.' },
@@ -410,7 +463,22 @@ const tasks = ref([
   { id: 'task-016', date: '2026-08-20', name: 'Riset media untuk pitching', start: '13:45', end: '', status: 'Progres', employeeId: 'emp-003', deadline: '2026-08-30', note: 'Daftar media sedang diperluas.' },
   { id: 'task-017', date: '2026-08-18', name: 'Revisi proposal komunikasi', start: '10:30', end: '12:10', status: 'Selesai', employeeId: 'emp-002', deadline: '2026-08-18', note: 'Proposal revisi sudah dikirim.' },
   { id: 'task-018', date: '2026-08-12', name: 'Koordinasi agenda media visit', start: '09:20', end: '', status: 'Dibatalkan', employeeId: 'emp-006', deadline: '2026-08-13', note: 'Agenda dibatalkan dan akan dijadwalkan ulang.' }
-])
+]
+
+const tasks = ref(legacyTasks.map((task) => ({
+  id: task.id,
+  name: task.name,
+  status: task.status,
+  employeeId: task.employeeId,
+  deadline: task.deadline,
+  note: task.note,
+  sessions: [{ id: `${task.id}-session-1`, date: task.date, start: task.start, end: task.end }]
+})))
+
+const multiDayTask = tasks.value.find((task) => task.id === 'task-002')
+if (multiDayTask) {
+  multiDayTask.sessions.unshift({ id: 'task-002-session-0', date: '2026-08-27', start: '15:00', end: '16:30' })
+}
 
 const draftFilters = reactive({
   search: '',
@@ -429,17 +497,24 @@ const isTaskModalOpen = ref(false)
 const taskModalMode = ref('view')
 const selectedTaskId = ref(null)
 const taskFormError = ref('')
+const taskDetailError = ref('')
 const taskForm = reactive({
   name: '',
-  date: currentDateIso,
-  start: '',
-  end: '',
   status: 'Progres',
   employeeId: '',
   deadline: currentDateIso,
-  note: ''
+  note: '',
+  sessions: []
 })
+
+const sessionEditorMode = ref('')
+const selectedSessionId = ref(null)
+const sessionFormError = ref('')
+const sessionForm = reactive({ date: currentDateIso, start: '', end: '' })
+
 const isDeleteConfirmOpen = ref(false)
+const deleteTargetType = ref('task')
+const deleteSessionId = ref(null)
 
 const isDateRangePickerOpen = ref(false)
 const customRangeError = ref('')
@@ -455,11 +530,38 @@ const dateRangeLabels = {
 
 const employeeMap = computed(() => new Map(employees.map((employee) => [employee.id, employee])))
 const selectedTask = computed(() => tasks.value.find((task) => task.id === selectedTaskId.value) || null)
+const selectedTaskSessionsSorted = computed(() => {
+  if (!selectedTask.value) return []
+  return [...selectedTask.value.sessions].sort((a, b) => sessionTimestamp(a) - sessionTimestamp(b))
+})
 const taskModalTitle = computed(() => {
   if (taskModalMode.value === 'add') return 'Tambah Tugas'
   if (taskModalMode.value === 'edit') return 'Edit Tugas'
   return 'Detail Tugas'
 })
+const deleteConfirmTitle = computed(() => deleteTargetType.value === 'session' ? 'Hapus Jam Pengerjaan?' : 'Hapus Tugas?')
+const deleteConfirmMessage = computed(() => {
+  if (deleteTargetType.value === 'session') {
+    const session = selectedTask.value?.sessions.find((item) => item.id === deleteSessionId.value)
+    return session
+      ? `Hanya sesi ${formatDate(session.date)} ${session.start || '-'} - ${session.end || '-'} yang akan dihapus.`
+      : 'Hanya sesi waktu pengerjaan yang dipilih yang akan dihapus.'
+  }
+  return 'Tugas beserta seluruh sesi waktu pengerjaannya akan dihapus dari tabel mock saat ini.'
+})
+
+const taskRows = computed(() => tasks.value.flatMap((task) => task.sessions.map((session) => ({
+  taskId: task.id,
+  sessionId: session.id,
+  date: session.date,
+  start: session.start,
+  end: session.end,
+  name: task.name,
+  status: task.status,
+  employeeId: task.employeeId,
+  deadline: task.deadline,
+  note: task.note
+}))))
 
 const activeDateRangeLabel = computed(() => {
   if (activeFilters.dateRange === 'custom' && activeFilters.customStart && activeFilters.customEnd) {
@@ -468,37 +570,34 @@ const activeDateRangeLabel = computed(() => {
   return dateRangeLabels[activeFilters.dateRange] || 'Semua Tanggal'
 })
 
-const filteredTasks = computed(() => {
+const filteredTaskRows = computed(() => {
   const searchTerm = activeFilters.search.trim().toLowerCase()
 
-  return tasks.value
-    .filter((task) => {
-      const employee = employeeMap.value.get(task.employeeId)
-      const searchableText = [task.name, task.note, employee?.name].filter(Boolean).join(' ').toLowerCase()
-
+  return taskRows.value
+    .filter((row) => {
+      const employee = employeeMap.value.get(row.employeeId)
+      const searchableText = [row.name, row.note, employee?.name].filter(Boolean).join(' ').toLowerCase()
       const matchesSearch = !searchTerm || searchableText.includes(searchTerm)
-      const matchesStatus = activeFilters.status === 'all' || task.status === activeFilters.status
-      const matchesEmployee = activeFilters.employee === 'all' || task.employeeId === activeFilters.employee
+      const matchesStatus = activeFilters.status === 'all' || row.status === activeFilters.status
+      const matchesEmployee = activeFilters.employee === 'all' || row.employeeId === activeFilters.employee
       const matchesPosition = activeFilters.position === 'all' || employee?.position === activeFilters.position
-      const matchesDate = matchesDateRange(task.date, activeFilters)
-
+      const matchesDate = matchesDateRange(row.date, activeFilters)
       return matchesSearch && matchesStatus && matchesEmployee && matchesPosition && matchesDate
     })
-    .sort((a, b) => taskTimestamp(b) - taskTimestamp(a))
+    .sort((a, b) => taskRowTimestamp(b) - taskRowTimestamp(a))
 })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredTasks.value.length / pageSize.value)))
-const paginatedTasks = computed(() => {
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTaskRows.value.length / pageSize.value)))
+const paginatedTaskRows = computed(() => {
   const safePage = Math.min(currentPage.value, totalPages.value)
   const start = (safePage - 1) * pageSize.value
-  return filteredTasks.value.slice(start, start + pageSize.value)
+  return filteredTaskRows.value.slice(start, start + pageSize.value)
 })
-const paginationStart = computed(() => filteredTasks.value.length ? (currentPage.value - 1) * pageSize.value + 1 : 0)
-const paginationEnd = computed(() => Math.min(currentPage.value * pageSize.value, filteredTasks.value.length))
+const paginationStart = computed(() => filteredTaskRows.value.length ? (currentPage.value - 1) * pageSize.value + 1 : 0)
+const paginationEnd = computed(() => Math.min(currentPage.value * pageSize.value, filteredTaskRows.value.length))
 const visiblePages = computed(() => {
   const total = totalPages.value
   if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)
-
   let start = Math.max(1, currentPage.value - 2)
   let end = Math.min(total, start + 4)
   start = Math.max(1, end - 4)
@@ -552,10 +651,14 @@ function dateTimestamp(value) {
   return Date.UTC(year, month - 1, day)
 }
 
-function taskTimestamp(task) {
-  const { year, month, day } = parseIsoDate(task.date)
-  const [hour, minute] = String(task.start || '00:00').split(':').map(Number)
+function taskRowTimestamp(row) {
+  const { year, month, day } = parseIsoDate(row.date)
+  const [hour, minute] = String(row.start || '00:00').split(':').map(Number)
   return Date.UTC(year, month - 1, day, hour || 0, minute || 0)
+}
+
+function sessionTimestamp(session) {
+  return taskRowTimestamp(session)
 }
 
 function matchesDateRange(value, filters) {
@@ -593,6 +696,14 @@ function statusClass(status) {
   }[status] || ''
 }
 
+function newSession(date = currentDateIso) {
+  return { id: '', date, start: '', end: '' }
+}
+
+function cloneSessions(sessions) {
+  return sessions.map((session) => ({ ...session }))
+}
+
 function handleDateRangeSelection() {
   if (draftFilters.dateRange !== 'custom') return
   openCustomRangePicker()
@@ -604,7 +715,6 @@ function applyFilters() {
     customRangeError.value = 'Pilih tanggal mulai dan tanggal selesai.'
     return
   }
-
   Object.assign(activeFilters, draftFilters)
   resetPagination()
 }
@@ -631,10 +741,19 @@ function changePage(page) {
   currentPage.value = Math.min(Math.max(page, 1), totalPages.value)
 }
 
-function openTaskDetail(task) {
-  selectedTaskId.value = task.id
+function updateTaskStatus(taskId, status) {
+  const task = tasks.value.find((item) => item.id === taskId)
+  if (!task || !taskStatuses.includes(status)) return
+  task.status = status
+  currentPage.value = Math.min(currentPage.value, totalPages.value)
+}
+
+function openTaskDetail(row) {
+  selectedTaskId.value = row.taskId || row.id
   taskModalMode.value = 'view'
   taskFormError.value = ''
+  taskDetailError.value = ''
+  cancelSessionEditor()
   isTaskModalOpen.value = true
 }
 
@@ -643,15 +762,14 @@ function openAddTask() {
   taskModalMode.value = 'add'
   Object.assign(taskForm, {
     name: '',
-    date: currentDateIso,
-    start: '',
-    end: '',
     status: 'Progres',
     employeeId: '',
     deadline: currentDateIso,
-    note: ''
+    note: '',
+    sessions: [newSession(currentDateIso)]
   })
   taskFormError.value = ''
+  taskDetailError.value = ''
   isTaskModalOpen.value = true
 }
 
@@ -659,16 +777,31 @@ function startEditTask() {
   if (!selectedTask.value) return
   Object.assign(taskForm, {
     name: selectedTask.value.name,
-    date: selectedTask.value.date,
-    start: selectedTask.value.start,
-    end: selectedTask.value.end,
     status: selectedTask.value.status,
     employeeId: selectedTask.value.employeeId,
     deadline: selectedTask.value.deadline,
-    note: selectedTask.value.note
+    note: selectedTask.value.note,
+    sessions: cloneSessions(selectedTask.value.sessions)
   })
   taskFormError.value = ''
+  taskDetailError.value = ''
+  cancelSessionEditor()
   taskModalMode.value = 'edit'
+}
+
+function addTaskFormSession() {
+  const lastDate = taskForm.sessions.at(-1)?.date || currentDateIso
+  taskForm.sessions.push(newSession(lastDate))
+  taskFormError.value = ''
+}
+
+function removeTaskFormSession(index) {
+  if (taskForm.sessions.length <= 1) {
+    taskFormError.value = 'Tugas harus memiliki minimal satu waktu pengerjaan.'
+    return
+  }
+  taskForm.sessions.splice(index, 1)
+  taskFormError.value = ''
 }
 
 function cancelTaskForm() {
@@ -680,14 +813,29 @@ function cancelTaskForm() {
   taskModalMode.value = 'view'
 }
 
-function validateTaskForm() {
-  if (!taskForm.name || !taskForm.date || !taskForm.start || !taskForm.status || !taskForm.employeeId || !taskForm.deadline) {
-    return 'Nama tugas, tanggal, mulai, status, karyawan, dan deadline wajib diisi.'
-  }
-  if (taskForm.end && taskForm.end <= taskForm.start) {
-    return 'Jam selesai harus lebih besar dari jam mulai.'
+function validateSessions(sessions) {
+  if (!sessions.length) return 'Tambahkan minimal satu waktu pengerjaan.'
+  for (const [index, session] of sessions.entries()) {
+    if (!session.date || !session.start) return `Tanggal dan jam mulai sesi ${index + 1} wajib diisi.`
+    if (session.end && session.end <= session.start) return `Jam selesai sesi ${index + 1} harus lebih besar dari jam mulai.`
   }
   return ''
+}
+
+function validateTaskForm() {
+  if (!taskForm.name || !taskForm.status || !taskForm.employeeId || !taskForm.deadline) {
+    return 'Nama tugas, status, karyawan, dan deadline wajib diisi.'
+  }
+  return validateSessions(taskForm.sessions)
+}
+
+function normalizeSessions(sessions, taskId) {
+  return sessions.map((session, index) => ({
+    id: session.id || `${taskId}-session-${Date.now()}-${index}`,
+    date: session.date,
+    start: session.start,
+    end: session.end
+  }))
 }
 
 function saveTask() {
@@ -697,28 +845,98 @@ function saveTask() {
     return
   }
 
-  const payload = {
-    name: taskForm.name,
-    date: taskForm.date,
-    start: taskForm.start,
-    end: taskForm.end,
-    status: taskForm.status,
-    employeeId: taskForm.employeeId,
-    deadline: taskForm.deadline,
-    note: taskForm.note
-  }
-
   if (taskModalMode.value === 'add') {
-    tasks.value.push({ id: `task-${Date.now()}`, ...payload })
+    const taskId = `task-${Date.now()}`
+    tasks.value.push({
+      id: taskId,
+      name: taskForm.name,
+      status: taskForm.status,
+      employeeId: taskForm.employeeId,
+      deadline: taskForm.deadline,
+      note: taskForm.note,
+      sessions: normalizeSessions(taskForm.sessions, taskId)
+    })
     resetPagination()
     closeTaskModal()
     return
   }
 
   const index = tasks.value.findIndex((task) => task.id === selectedTaskId.value)
-  if (index >= 0) tasks.value[index] = { ...tasks.value[index], ...payload }
+  if (index >= 0) {
+    const taskId = tasks.value[index].id
+    tasks.value[index] = {
+      ...tasks.value[index],
+      name: taskForm.name,
+      status: taskForm.status,
+      employeeId: taskForm.employeeId,
+      deadline: taskForm.deadline,
+      note: taskForm.note,
+      sessions: normalizeSessions(taskForm.sessions, taskId)
+    }
+  }
   taskFormError.value = ''
   taskModalMode.value = 'view'
+  currentPage.value = Math.min(currentPage.value, totalPages.value)
+}
+
+function openAddSession() {
+  if (!selectedTask.value) return
+  sessionEditorMode.value = 'add'
+  selectedSessionId.value = null
+  Object.assign(sessionForm, newSession(selectedTask.value.sessions.at(-1)?.date || currentDateIso))
+  sessionFormError.value = ''
+  taskDetailError.value = ''
+}
+
+function startEditSession(session) {
+  sessionEditorMode.value = 'edit'
+  selectedSessionId.value = session.id
+  Object.assign(sessionForm, { date: session.date, start: session.start, end: session.end })
+  sessionFormError.value = ''
+  taskDetailError.value = ''
+}
+
+function cancelSessionEditor() {
+  sessionEditorMode.value = ''
+  selectedSessionId.value = null
+  sessionFormError.value = ''
+}
+
+function validateSessionForm() {
+  if (!sessionForm.date || !sessionForm.start) return 'Tanggal dan jam mulai wajib diisi.'
+  if (sessionForm.end && sessionForm.end <= sessionForm.start) return 'Jam selesai harus lebih besar dari jam mulai.'
+  return ''
+}
+
+function saveSession() {
+  if (!selectedTask.value) return
+  const error = validateSessionForm()
+  if (error) {
+    sessionFormError.value = error
+    return
+  }
+
+  if (sessionEditorMode.value === 'add') {
+    selectedTask.value.sessions.push({
+      id: `${selectedTask.value.id}-session-${Date.now()}`,
+      date: sessionForm.date,
+      start: sessionForm.start,
+      end: sessionForm.end
+    })
+  } else if (sessionEditorMode.value === 'edit') {
+    const sessionIndex = selectedTask.value.sessions.findIndex((session) => session.id === selectedSessionId.value)
+    if (sessionIndex >= 0) {
+      selectedTask.value.sessions[sessionIndex] = {
+        ...selectedTask.value.sessions[sessionIndex],
+        date: sessionForm.date,
+        start: sessionForm.start,
+        end: sessionForm.end
+      }
+    }
+  }
+
+  cancelSessionEditor()
+  currentPage.value = Math.min(currentPage.value, totalPages.value)
 }
 
 function closeTaskModal() {
@@ -726,21 +944,48 @@ function closeTaskModal() {
   taskModalMode.value = 'view'
   selectedTaskId.value = null
   taskFormError.value = ''
+  taskDetailError.value = ''
+  cancelSessionEditor()
 }
 
 function openDeleteConfirm() {
   if (!selectedTask.value) return
+  deleteTargetType.value = 'task'
+  deleteSessionId.value = null
+  isDeleteConfirmOpen.value = true
+}
+
+function openDeleteSessionConfirm(session) {
+  if (!selectedTask.value) return
+  if (selectedTask.value.sessions.length <= 1) {
+    taskDetailError.value = 'Tugas harus memiliki minimal satu waktu pengerjaan. Gunakan Hapus Tugas jika ingin menghapus seluruh tugas.'
+    return
+  }
+  deleteTargetType.value = 'session'
+  deleteSessionId.value = session.id
+  taskDetailError.value = ''
   isDeleteConfirmOpen.value = true
 }
 
 function closeDeleteConfirm() {
   isDeleteConfirmOpen.value = false
+  deleteTargetType.value = 'task'
+  deleteSessionId.value = null
 }
 
-function confirmDeleteTask() {
-  if (!selectedTaskId.value) return
+function confirmDeleteTarget() {
+  if (!selectedTask.value) return
+
+  if (deleteTargetType.value === 'session') {
+    selectedTask.value.sessions = selectedTask.value.sessions.filter((session) => session.id !== deleteSessionId.value)
+    if (selectedSessionId.value === deleteSessionId.value) cancelSessionEditor()
+    closeDeleteConfirm()
+    currentPage.value = Math.min(currentPage.value, totalPages.value)
+    return
+  }
+
   tasks.value = tasks.value.filter((task) => task.id !== selectedTaskId.value)
-  isDeleteConfirmOpen.value = false
+  closeDeleteConfirm()
   closeTaskModal()
   currentPage.value = Math.min(currentPage.value, totalPages.value)
 }
@@ -770,19 +1015,16 @@ function moveCalendar(amount) {
 
 function selectCustomDate(iso) {
   customRangeError.value = ''
-
   if (!tempCustomRange.start || tempCustomRange.end) {
     tempCustomRange.start = iso
     tempCustomRange.end = ''
     return
   }
-
   if (dateTimestamp(iso) < dateTimestamp(tempCustomRange.start)) {
     tempCustomRange.start = iso
     tempCustomRange.end = ''
     return
   }
-
   tempCustomRange.end = iso
 }
 
@@ -814,15 +1056,15 @@ function applyCustomRange() {
 }
 
 function exportToExcel() {
-  const rows = filteredTasks.value.map((task) => ({
-    Tanggal: formatDate(task.date),
-    'Nama Tugas': task.name,
-    Mulai: task.start || '-',
-    Selesai: task.end || '-',
-    Status: task.status,
-    Dikerjakan: employeeName(task.employeeId),
-    Deadline: formatDate(task.deadline),
-    Catatan: task.note || '-'
+  const rows = filteredTaskRows.value.map((row) => ({
+    Tanggal: formatDate(row.date),
+    'Nama Tugas': row.name,
+    Mulai: row.start || '-',
+    Selesai: row.end || '-',
+    Status: row.status,
+    Dikerjakan: employeeName(row.employeeId),
+    Deadline: formatDate(row.deadline),
+    Catatan: row.note || '-'
   }))
 
   const worksheet = XLSX.utils.json_to_sheet(rows, {
@@ -836,7 +1078,6 @@ function exportToExcel() {
 
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Tugas')
-
   const safeRange = activeDateRangeLabel.value.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')
   XLSX.writeFile(workbook, `tugas-${safeRange || 'semua-tanggal'}.xlsx`)
 }
