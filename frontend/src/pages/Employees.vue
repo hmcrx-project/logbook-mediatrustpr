@@ -2,6 +2,18 @@
   <section class="employees-page">
     <div class="employee-page-actions">
       <BaseButton @click="openAddEmployee">Tambah Karyawan</BaseButton>
+
+      <div class="employee-search-control">
+        <input
+          v-model.trim="searchQuery"
+          type="text"
+          class="form-input employee-search-input"
+          placeholder="Cari nama, jabatan, atau email"
+          aria-label="Cari karyawan"
+          autocomplete="off"
+          @input="resetPagination"
+        />
+      </div>
     </div>
 
     <section class="employees-table-card card">
@@ -10,7 +22,7 @@
           <h2>Data Karyawan</h2>
           <p>Kelola akun karyawan MediatrustPR.</p>
         </div>
-        <span>{{ employees.length }} karyawan</span>
+        <span>{{ filteredEmployees.length }} karyawan</span>
       </div>
 
       <div class="employees-table-scroll">
@@ -63,7 +75,7 @@
       </div>
 
       <div class="employees-pagination">
-        <p>Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ employees.length }} karyawan</p>
+        <p>Menampilkan {{ paginationStart }}–{{ paginationEnd }} dari {{ filteredEmployees.length }} karyawan</p>
 
         <div class="pagination-controls">
           <button
@@ -296,6 +308,7 @@ const employees = ref([
   { id: 'emp-014', name: 'Bagas Wiratama', position: 'Content Specialist', email: 'bagas.wiratama@mediatrustpr.id', password: 'demo1234' }
 ])
 
+const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const employeeModalMode = ref('')
@@ -319,14 +332,23 @@ const passwordForm = reactive({
 })
 
 const selectedEmployee = computed(() => employees.value.find((employee) => employee.id === selectedEmployeeId.value) || null)
-const totalPages = computed(() => Math.max(1, Math.ceil(employees.value.length / pageSize.value)))
+const filteredEmployees = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  const matchingEmployees = query
+    ? employees.value.filter((employee) => [employee.name, employee.position, employee.email]
+      .some((value) => String(value || '').toLowerCase().includes(query)))
+    : employees.value
+
+  return [...matchingEmployees].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }))
+})
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredEmployees.value.length / pageSize.value)))
 const paginatedEmployees = computed(() => {
   const safePage = Math.min(currentPage.value, totalPages.value)
   const start = (safePage - 1) * pageSize.value
-  return employees.value.slice(start, start + pageSize.value)
+  return filteredEmployees.value.slice(start, start + pageSize.value)
 })
-const paginationStart = computed(() => employees.value.length ? (currentPage.value - 1) * pageSize.value + 1 : 0)
-const paginationEnd = computed(() => Math.min(currentPage.value * pageSize.value, employees.value.length))
+const paginationStart = computed(() => filteredEmployees.value.length ? (currentPage.value - 1) * pageSize.value + 1 : 0)
+const paginationEnd = computed(() => Math.min(currentPage.value * pageSize.value, filteredEmployees.value.length))
 const visiblePages = computed(() => {
   const total = totalPages.value
   if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)

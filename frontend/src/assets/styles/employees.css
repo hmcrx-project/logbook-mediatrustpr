@@ -6,10 +6,22 @@
 .employee-page-actions {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .employee-page-actions .btn {
   min-width: 132px;
+  flex: 0 0 auto;
+}
+
+.employee-search-control {
+  width: min(100%, 340px);
+  margin-left: auto;
+}
+
+.employee-search-input {
+  width: 100%;
 }
 
 .employees-table-card {
@@ -503,8 +515,18 @@
     gap: 16px;
   }
 
+  .employee-page-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .employee-page-actions .btn {
     width: 100%;
+  }
+
+  .employee-search-control {
+    width: 100%;
+    margin-left: 0;
   }
 
   .employees-table-heading,
