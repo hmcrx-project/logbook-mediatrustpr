@@ -367,7 +367,7 @@
 }
 
 .date-range-modal {
-  width: min(100%, 790px);
+  width: min(100%, 470px);
 }
 
 .task-confirm-modal {
@@ -760,9 +760,8 @@
 }
 
 .date-range-calendars {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  width: min(100%, 360px);
+  margin: 0 auto;
 }
 
 .calendar-panel {
@@ -772,12 +771,6 @@
   border-radius: var(--radius-md);
 }
 
-.calendar-panel h4 {
-  margin: 0 0 12px;
-  color: var(--heading);
-  font-size: 13px;
-  text-align: center;
-}
 
 .calendar-weekdays,
 .calendar-days {
@@ -891,9 +884,6 @@
     flex-direction: column;
   }
 
-  .date-range-calendars {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 640px) {

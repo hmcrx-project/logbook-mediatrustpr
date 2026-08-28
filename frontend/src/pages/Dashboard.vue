@@ -116,13 +116,15 @@
 
           <label class="modal-field">
             <span>Lokasi Kerja</span>
-            <select v-model="workLocationDraft" class="form-input">
+            <select
+              v-model="workLocationDraft"
+              :class="['form-input', { 'is-error': checkInSubmitted && !workLocationDraft }]"
+            >
               <option value="" disabled>Pilih WFO atau WFH</option>
               <option value="WFO">WFO</option>
               <option value="WFH">WFH</option>
             </select>
           </label>
-          <p v-if="modalError" class="modal-error">{{ modalError }}</p>
         </div>
 
         <div class="modal-actions">
@@ -151,7 +153,7 @@ const workDurationMinutes = ref(0)
 const isCheckInModalOpen = ref(false)
 const workLocationDraft = ref('')
 const selectedWorkLocation = ref('')
-const modalError = ref('')
+const checkInSubmitted = ref(false)
 const scheduledStartTime = '09:00'
 let timerId
 
@@ -234,20 +236,18 @@ function getJakartaTime(date = new Date()) {
 
 function openCheckInModal() {
   workLocationDraft.value = selectedWorkLocation.value || ''
-  modalError.value = ''
+  checkInSubmitted.value = false
   isCheckInModalOpen.value = true
 }
 
 function closeCheckInModal() {
   isCheckInModalOpen.value = false
-  modalError.value = ''
+  checkInSubmitted.value = false
 }
 
 function confirmCheckIn() {
-  if (!workLocationDraft.value) {
-    modalError.value = 'Pilih lokasi kerja terlebih dahulu.'
-    return
-  }
+  checkInSubmitted.value = true
+  if (!workLocationDraft.value) return
 
   const timestamp = new Date()
   checkInAt.value = timestamp

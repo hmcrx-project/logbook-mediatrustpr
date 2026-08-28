@@ -244,18 +244,29 @@
               <div class="task-session-editor-grid">
                 <label class="task-form-field">
                   <span>Tanggal</span>
-                  <input v-model="sessionForm.date" type="date" class="form-input" />
+                  <input
+                    v-model="sessionForm.date"
+                    type="date"
+                    :class="['form-input', { 'is-error': sessionFormSubmitted && !sessionForm.date }]"
+                  />
                 </label>
                 <label class="task-form-field">
                   <span>Jam Mulai</span>
-                  <input v-model="sessionForm.start" type="time" class="form-input" />
+                  <input
+                    v-model="sessionForm.start"
+                    type="time"
+                    :class="['form-input', { 'is-error': sessionFormSubmitted && !sessionForm.start }]"
+                  />
                 </label>
                 <label class="task-form-field">
                   <span>Jam Selesai</span>
-                  <input v-model="sessionForm.end" type="time" class="form-input" />
+                  <input
+                    v-model="sessionForm.end"
+                    type="time"
+                    :class="['form-input', { 'is-error': sessionFormSubmitted && isSessionEndInvalid(sessionForm) }]"
+                  />
                 </label>
               </div>
-              <p v-if="sessionFormError" class="task-form-error">{{ sessionFormError }}</p>
               <div class="task-session-editor-actions">
                 <BaseButton variant="outline" @click="cancelSessionEditor">Batal</BaseButton>
                 <BaseButton @click="saveSession">{{ sessionEditorMode === 'add' ? 'Tambahkan' : 'Simpan' }}</BaseButton>
@@ -269,12 +280,17 @@
         <form v-else class="task-form" @submit.prevent="saveTask">
           <label class="task-form-field task-form-field-wide">
             <span>Nama Tugas</span>
-            <input v-model.trim="taskForm.name" type="text" class="form-input" placeholder="Masukkan nama tugas" />
+            <input
+              v-model.trim="taskForm.name"
+              type="text"
+              :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.name }]"
+              placeholder="Masukkan nama tugas"
+            />
           </label>
 
           <label class="task-form-field">
             <span>Klien</span>
-            <select v-model="taskForm.clientId" class="form-input">
+            <select v-model="taskForm.clientId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.clientId }]">
               <option v-for="client in clients" :key="client.id" :value="client.id">
                 {{ client.name }}
               </option>
@@ -283,14 +299,14 @@
 
           <label class="task-form-field">
             <span>Status</span>
-            <select v-model="taskForm.status" class="form-input">
+            <select v-model="taskForm.status" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.status }]">
               <option v-for="status in taskStatuses" :key="status" :value="status">{{ status }}</option>
             </select>
           </label>
 
           <label class="task-form-field">
             <span>Dikerjakan</span>
-            <select v-model="taskForm.employeeId" class="form-input">
+            <select v-model="taskForm.employeeId" :class="['form-input', { 'is-error': taskFormSubmitted && !taskForm.employeeId }]">
               <option value="" disabled>Pilih karyawan</option>
               <option v-for="employee in employees" :key="employee.id" :value="employee.id">
                 {{ employee.name }}
@@ -321,22 +337,33 @@
               <div v-for="(session, index) in taskForm.sessions" :key="session.id || index" class="task-form-session-row">
                 <label class="task-form-field">
                   <span>Tanggal</span>
-                  <input v-model="session.date" type="date" class="form-input" />
+                  <input
+                    v-model="session.date"
+                    type="date"
+                    :class="['form-input', { 'is-error': taskFormSubmitted && !session.date }]"
+                  />
                 </label>
                 <label class="task-form-field">
                   <span>Jam Mulai</span>
-                  <input v-model="session.start" type="time" class="form-input" />
+                  <input
+                    v-model="session.start"
+                    type="time"
+                    :class="['form-input', { 'is-error': taskFormSubmitted && !session.start }]"
+                  />
                 </label>
                 <label class="task-form-field">
                   <span>Jam Selesai</span>
-                  <input v-model="session.end" type="time" class="form-input" />
+                  <input
+                    v-model="session.end"
+                    type="time"
+                    :class="['form-input', { 'is-error': taskFormSubmitted && isSessionEndInvalid(session) }]"
+                  />
                 </label>
                 <button type="button" class="task-form-session-remove" :disabled="taskForm.sessions.length === 1" @click="removeTaskFormSession(index)">Hapus</button>
               </div>
             </div>
           </section>
 
-          <p v-if="taskFormError" class="task-form-error task-form-field-wide">{{ taskFormError }}</p>
         </form>
 
         <div :class="['task-modal-actions', { 'task-modal-actions-split': taskModalMode === 'view' }]">
@@ -385,19 +412,18 @@
         <div class="date-range-content">
           <div class="date-range-toolbar">
             <button type="button" class="calendar-nav-button" aria-label="Bulan sebelumnya" @click="moveCalendar(-1)">‹</button>
-            <strong>{{ leftCalendar.label }} – {{ rightCalendar.label }}</strong>
+            <strong>{{ calendarMonth.label }}</strong>
             <button type="button" class="calendar-nav-button" aria-label="Bulan berikutnya" @click="moveCalendar(1)">›</button>
           </div>
 
           <div class="date-range-calendars">
-            <div v-for="calendar in [leftCalendar, rightCalendar]" :key="calendar.key" class="calendar-panel">
-              <h4>{{ calendar.label }}</h4>
+            <div class="calendar-panel">
               <div class="calendar-weekdays" aria-hidden="true">
                 <span v-for="weekday in weekdays" :key="weekday">{{ weekday }}</span>
               </div>
               <div class="calendar-days">
                 <button
-                  v-for="day in calendar.days"
+                  v-for="day in calendarMonth.days"
                   :key="day.iso"
                   type="button"
                   :class="[
@@ -444,6 +470,7 @@
 import { computed, reactive, ref } from 'vue'
 import * as XLSX from 'xlsx'
 import BaseButton from '../components/BaseButton.vue'
+import { useAuthStore } from '../stores/auth'
 
 const JAKARTA_TIME_ZONE = 'Asia/Jakarta'
 const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
@@ -455,6 +482,7 @@ const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
 
 const nowPart = (type) => jakartaNowParts.find((part) => part.type === type)?.value || ''
 const currentDateIso = `${nowPart('year')}-${nowPart('month')}-${nowPart('day')}`
+const auth = useAuthStore()
 
 const employees = [
   { id: 'emp-001', name: 'Admin MediatrustPR', position: 'Administrator' },
@@ -463,7 +491,16 @@ const employees = [
   { id: 'emp-004', name: 'Raka Putra', position: 'Monitoring Analyst' },
   { id: 'emp-005', name: 'Nadia Rahma', position: 'Content Specialist' },
   { id: 'emp-006', name: 'Dimas Saputra', position: 'Account Executive' }
+
 ]
+
+const accountEmployeeIds = {
+  admin: 'emp-001'
+}
+
+const loggedInEmployeeId = computed(() => (
+  accountEmployeeIds[String(auth.user?.username || '').toLowerCase()] || 'emp-001'
+))
 
 const clients = [
   { id: 'client-internal', name: 'Internal / Tanpa Klien' },
@@ -533,21 +570,21 @@ const pageSize = ref(10)
 const isTaskModalOpen = ref(false)
 const taskModalMode = ref('view')
 const selectedTaskId = ref(null)
-const taskFormError = ref('')
+const taskFormSubmitted = ref(false)
 const taskDetailError = ref('')
 const taskForm = reactive({
   name: '',
   clientId: 'client-internal',
   status: 'Progres',
-  employeeId: '',
-  deadline: currentDateIso,
+  employeeId: loggedInEmployeeId.value,
+  deadline: '',
   note: '',
   sessions: []
 })
 
 const sessionEditorMode = ref('')
 const selectedSessionId = ref(null)
-const sessionFormError = ref('')
+const sessionFormSubmitted = ref(false)
 const sessionForm = reactive({ date: currentDateIso, start: '', end: '' })
 
 const isDeleteConfirmOpen = ref(false)
@@ -646,8 +683,7 @@ const visiblePages = computed(() => {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 })
 
-const leftCalendar = computed(() => buildCalendar(calendarAnchor.value))
-const rightCalendar = computed(() => buildCalendar(addMonths(calendarAnchor.value, 1)))
+const calendarMonth = computed(() => buildCalendar(calendarAnchor.value))
 
 function createUtcDate(year, monthIndex, day) {
   return new Date(Date.UTC(year, monthIndex, day, 12))
@@ -798,7 +834,7 @@ function updateTaskStatus(taskId, status) {
 function openTaskDetail(row) {
   selectedTaskId.value = row.taskId || row.id
   taskModalMode.value = 'view'
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   taskDetailError.value = ''
   cancelSessionEditor()
   isTaskModalOpen.value = true
@@ -811,12 +847,12 @@ function openAddTask() {
     name: '',
     clientId: 'client-internal',
     status: 'Progres',
-    employeeId: '',
-    deadline: currentDateIso,
+    employeeId: loggedInEmployeeId.value,
+    deadline: '',
     note: '',
     sessions: [newSession(currentDateIso)]
   })
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   taskDetailError.value = ''
   isTaskModalOpen.value = true
 }
@@ -832,7 +868,7 @@ function startEditTask() {
     note: selectedTask.value.note,
     sessions: cloneSessions(selectedTask.value.sessions)
   })
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   taskDetailError.value = ''
   cancelSessionEditor()
   taskModalMode.value = 'edit'
@@ -841,20 +877,15 @@ function startEditTask() {
 function addTaskFormSession() {
   const lastDate = taskForm.sessions.at(-1)?.date || currentDateIso
   taskForm.sessions.push(newSession(lastDate))
-  taskFormError.value = ''
 }
 
 function removeTaskFormSession(index) {
-  if (taskForm.sessions.length <= 1) {
-    taskFormError.value = 'Tugas harus memiliki minimal satu waktu pengerjaan.'
-    return
-  }
+  if (taskForm.sessions.length <= 1) return
   taskForm.sessions.splice(index, 1)
-  taskFormError.value = ''
 }
 
 function cancelTaskForm() {
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   if (taskModalMode.value === 'add') {
     closeTaskModal()
     return
@@ -862,20 +893,25 @@ function cancelTaskForm() {
   taskModalMode.value = 'view'
 }
 
+function isSessionEndInvalid(session) {
+  return Boolean(session.end && session.start && session.end <= session.start)
+}
+
 function validateSessions(sessions) {
-  if (!sessions.length) return 'Tambahkan minimal satu waktu pengerjaan.'
-  for (const [index, session] of sessions.entries()) {
-    if (!session.date || !session.start) return `Tanggal dan jam mulai sesi ${index + 1} wajib diisi.`
-    if (session.end && session.end <= session.start) return `Jam selesai sesi ${index + 1} harus lebih besar dari jam mulai.`
-  }
-  return ''
+  return Boolean(
+    sessions.length &&
+    sessions.every((session) => session.date && session.start && !isSessionEndInvalid(session))
+  )
 }
 
 function validateTaskForm() {
-  if (!taskForm.name || !taskForm.clientId || !taskForm.status || !taskForm.employeeId || !taskForm.deadline) {
-    return 'Nama tugas, klien, status, karyawan, dan deadline wajib diisi.'
-  }
-  return validateSessions(taskForm.sessions)
+  return Boolean(
+    taskForm.name &&
+    taskForm.clientId &&
+    taskForm.status &&
+    taskForm.employeeId &&
+    validateSessions(taskForm.sessions)
+  )
 }
 
 function normalizeSessions(sessions, taskId) {
@@ -888,11 +924,8 @@ function normalizeSessions(sessions, taskId) {
 }
 
 function saveTask() {
-  const error = validateTaskForm()
-  if (error) {
-    taskFormError.value = error
-    return
-  }
+  taskFormSubmitted.value = true
+  if (!validateTaskForm()) return
 
   if (taskModalMode.value === 'add') {
     const taskId = `task-${Date.now()}`
@@ -925,7 +958,7 @@ function saveTask() {
       sessions: normalizeSessions(taskForm.sessions, taskId)
     }
   }
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   taskModalMode.value = 'view'
   currentPage.value = Math.min(currentPage.value, totalPages.value)
 }
@@ -935,7 +968,7 @@ function openAddSession() {
   sessionEditorMode.value = 'add'
   selectedSessionId.value = null
   Object.assign(sessionForm, newSession(selectedTask.value.sessions.at(-1)?.date || currentDateIso))
-  sessionFormError.value = ''
+  sessionFormSubmitted.value = false
   taskDetailError.value = ''
 }
 
@@ -943,29 +976,24 @@ function startEditSession(session) {
   sessionEditorMode.value = 'edit'
   selectedSessionId.value = session.id
   Object.assign(sessionForm, { date: session.date, start: session.start, end: session.end })
-  sessionFormError.value = ''
+  sessionFormSubmitted.value = false
   taskDetailError.value = ''
 }
 
 function cancelSessionEditor() {
   sessionEditorMode.value = ''
   selectedSessionId.value = null
-  sessionFormError.value = ''
+  sessionFormSubmitted.value = false
 }
 
 function validateSessionForm() {
-  if (!sessionForm.date || !sessionForm.start) return 'Tanggal dan jam mulai wajib diisi.'
-  if (sessionForm.end && sessionForm.end <= sessionForm.start) return 'Jam selesai harus lebih besar dari jam mulai.'
-  return ''
+  return Boolean(sessionForm.date && sessionForm.start && !isSessionEndInvalid(sessionForm))
 }
 
 function saveSession() {
   if (!selectedTask.value) return
-  const error = validateSessionForm()
-  if (error) {
-    sessionFormError.value = error
-    return
-  }
+  sessionFormSubmitted.value = true
+  if (!validateSessionForm()) return
 
   if (sessionEditorMode.value === 'add') {
     selectedTask.value.sessions.push({
@@ -994,7 +1022,7 @@ function closeTaskModal() {
   isTaskModalOpen.value = false
   taskModalMode.value = 'view'
   selectedTaskId.value = null
-  taskFormError.value = ''
+  taskFormSubmitted.value = false
   taskDetailError.value = ''
   cancelSessionEditor()
 }

@@ -138,15 +138,26 @@
           <template v-else>
             <label class="detail-edit-field">
               <span>Absen Masuk</span>
-              <input v-model="editForm.checkIn" type="time" class="form-input" />
+              <input
+                v-model="editForm.checkIn"
+                type="time"
+                :class="['form-input', { 'is-error': editSubmitted && !editForm.checkIn }]"
+              />
             </label>
             <label class="detail-edit-field">
               <span>Absen Pulang</span>
-              <input v-model="editForm.checkOut" type="time" class="form-input" />
+              <input
+                v-model="editForm.checkOut"
+                type="time"
+                :class="['form-input', { 'is-error': editSubmitted && (!editForm.checkOut || editDurationMinutes === null) }]"
+              />
             </label>
             <label class="detail-edit-field">
               <span>Lokasi Kerja</span>
-              <select v-model="editForm.workLocation" class="form-input">
+              <select
+                v-model="editForm.workLocation"
+                :class="['form-input', { 'is-error': editSubmitted && !editForm.workLocation }]"
+              >
                 <option value="WFO">WFO</option>
                 <option value="WFH">WFH</option>
               </select>
@@ -155,7 +166,6 @@
               <span>Total Jam Kerja</span>
               <strong>{{ editDurationLabel }}</strong>
             </div>
-            <p v-if="editError" class="detail-edit-error">{{ editError }}</p>
           </template>
         </div>
 
@@ -217,7 +227,7 @@ const draftFilters = reactive({
 const activeFilters = reactive({ ...draftFilters })
 const selectedDetail = ref(null)
 const isEditingDetail = ref(false)
-const editError = ref('')
+const editSubmitted = ref(false)
 const attendanceOverrides = reactive({})
 const editForm = reactive({
   checkIn: '',
@@ -349,7 +359,7 @@ function openDetail(employee, day) {
 
   selectedDetail.value = { employee, day, attendance: { ...attendance } }
   isEditingDetail.value = false
-  editError.value = ''
+  editSubmitted.value = false
 }
 
 function startEditDetail() {
@@ -360,22 +370,20 @@ function startEditDetail() {
     checkOut: selectedDetail.value.attendance.checkOut,
     workLocation: selectedDetail.value.attendance.workLocation
   })
-  editError.value = ''
+  editSubmitted.value = false
   isEditingDetail.value = true
 }
 
 function cancelEditDetail() {
   isEditingDetail.value = false
-  editError.value = ''
+  editSubmitted.value = false
 }
 
 function saveDetail() {
   if (!selectedDetail.value) return
 
-  if (editDurationMinutes.value === null) {
-    editError.value = 'Jam pulang harus lebih besar dari jam masuk.'
-    return
-  }
+  editSubmitted.value = true
+  if (!editForm.checkIn || !editForm.checkOut || !editForm.workLocation || editDurationMinutes.value === null) return
 
   const updatedAttendance = {
     checkIn: editForm.checkIn,
@@ -388,13 +396,13 @@ function saveDetail() {
   attendanceOverrides[key] = updatedAttendance
   selectedDetail.value.attendance = { ...updatedAttendance }
   isEditingDetail.value = false
-  editError.value = ''
+  editSubmitted.value = false
 }
 
 function closeDetail() {
   selectedDetail.value = null
   isEditingDetail.value = false
-  editError.value = ''
+  editSubmitted.value = false
 }
 
 function exportToExcel() {
