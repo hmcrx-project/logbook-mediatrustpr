@@ -412,20 +412,22 @@ function handleTableWheel(event) {
 
 function exportToExcel() {
   const rows = [
-    ['Nama Karyawan', ...daysInMonth.value],
+    ['Nama Karyawan', ...daysInMonth.value, 'Total'],
     ...filteredEmployees.value.map((employee) => [
       employee.name,
       ...daysInMonth.value.map((day) => {
         const attendance = getAttendance(employee, day)
         return attendance ? formatDuration(attendance.durationMinutes) : '-'
-      })
+      }),
+      formatDuration(getEmployeeTotalMinutes(employee))
     ])
   ]
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows)
   worksheet['!cols'] = [
     { wch: 24 },
-    ...daysInMonth.value.map(() => ({ wch: 9 }))
+    ...daysInMonth.value.map(() => ({ wch: 9 })),
+    { wch: 12 }
   ]
 
   const workbook = XLSX.utils.book_new()
