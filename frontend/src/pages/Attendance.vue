@@ -1,6 +1,6 @@
 <template>
   <section class="attendance-page">
-    <section class="attendance-filter card" aria-label="Filter absensi">
+    <section class="attendance-filter" aria-label="Filter absensi">
       <div class="filter-grid">
         <label class="filter-field">
           <span>Nama Karyawan</span>
@@ -41,6 +41,7 @@
 
       <div class="filter-actions">
         <BaseButton @click="applyFilters">Filter</BaseButton>
+        <BaseButton variant="outline" @click="resetFilters">Reset Filter</BaseButton>
         <BaseButton variant="outline" @click="exportToExcel">Export to Excel</BaseButton>
       </div>
     </section>
@@ -205,6 +206,17 @@ const detailDateLabel = computed(() => {
 })
 
 function applyFilters() {
+  Object.assign(activeFilters, draftFilters)
+  closeDetail()
+}
+
+function resetFilters() {
+  Object.assign(draftFilters, {
+    employee: 'all',
+    position: 'all',
+    month: currentMonth,
+    year: currentYear
+  })
   Object.assign(activeFilters, draftFilters)
   closeDetail()
 }

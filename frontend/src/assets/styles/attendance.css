@@ -6,7 +6,6 @@
 .attendance-filter {
   display: grid;
   gap: 16px;
-  padding: 18px;
 }
 
 .filter-grid {
@@ -313,17 +312,13 @@
     gap: 16px;
   }
 
-  .attendance-filter {
-    padding: 16px;
-  }
-
   .filter-grid {
     grid-template-columns: 1fr;
   }
 
   .filter-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .filter-actions .btn {
