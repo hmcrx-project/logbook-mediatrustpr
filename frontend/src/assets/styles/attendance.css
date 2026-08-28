@@ -4,8 +4,7 @@
 }
 
 .attendance-filter {
-  display: grid;
-  gap: 16px;
+  display: block;
 }
 
 .filter-grid {
@@ -44,6 +43,7 @@
 .filter-secondary-actions {
   display: flex;
   justify-content: flex-start;
+  margin-top: 16px;
 }
 
 .filter-secondary-actions .btn {

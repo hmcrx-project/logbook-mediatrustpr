@@ -1,7 +1,27 @@
 <template>
   <section class="tasks-page">
     <section class="tasks-filter">
-      <div class="task-filter-grid">
+      <BaseButton
+        type="button"
+        variant="outline"
+        class="responsive-filter-toggle"
+        :aria-expanded="isFilterExpanded"
+        aria-controls="tasks-filter-panel"
+        @click="isFilterExpanded = !isFilterExpanded"
+      >
+        <span class="responsive-filter-toggle-label">
+          <svg class="responsive-filter-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 5h14M5.5 10h9M8 15h4" stroke-linecap="round" />
+          </svg>
+          <span>Filter</span>
+        </span>
+        <svg class="responsive-filter-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </BaseButton>
+
+      <div id="tasks-filter-panel" class="responsive-filter-panel" :class="{ 'is-open': isFilterExpanded }">
+        <div class="task-filter-grid">
         <label class="task-filter-field search-field">
           <span>Pencarian</span>
           <input
@@ -89,9 +109,10 @@
           </span>
         </label>
 
-        <div class="task-inline-actions">
-          <BaseButton @click="applyFilters">Filter</BaseButton>
-          <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+          <div class="task-inline-actions">
+            <BaseButton @click="applyFilters">Filter</BaseButton>
+            <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+          </div>
         </div>
       </div>
 
@@ -636,6 +657,7 @@ const draftFilters = reactive({
   customEnd: ''
 })
 const activeFilters = reactive({ ...draftFilters })
+const isFilterExpanded = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 

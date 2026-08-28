@@ -122,3 +122,52 @@ a:hover {
 
 
 .btn-full { width: 100%; }
+
+/* Shared responsive filter pattern */
+.responsive-filter-toggle {
+  display: none;
+  width: 128px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.responsive-filter-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.responsive-filter-icon,
+.responsive-filter-chevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.responsive-filter-chevron {
+  transition: transform var(--transition);
+}
+
+.responsive-filter-toggle[aria-expanded='true'] .responsive-filter-chevron {
+  transform: rotate(180deg);
+}
+
+.responsive-filter-panel {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .responsive-filter-toggle {
+    display: inline-flex;
+  }
+
+  .responsive-filter-panel {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .responsive-filter-panel.is-open {
+    display: block;
+  }
+}

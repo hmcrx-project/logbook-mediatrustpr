@@ -4,8 +4,7 @@
 }
 
 .tasks-filter {
-  display: grid;
-  gap: 16px;
+  display: block;
 }
 
 .task-filter-grid {
@@ -52,6 +51,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 16px;
 }
 
 .task-secondary-actions .btn {

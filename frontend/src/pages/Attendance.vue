@@ -1,7 +1,27 @@
 <template>
   <section class="attendance-page">
     <section class="attendance-filter" aria-label="Filter absensi">
-      <div class="filter-grid">
+      <BaseButton
+        type="button"
+        variant="outline"
+        class="responsive-filter-toggle"
+        :aria-expanded="isFilterExpanded"
+        aria-controls="attendance-filter-panel"
+        @click="isFilterExpanded = !isFilterExpanded"
+      >
+        <span class="responsive-filter-toggle-label">
+          <svg class="responsive-filter-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 5h14M5.5 10h9M8 15h4" stroke-linecap="round" />
+          </svg>
+          <span>Filter</span>
+        </span>
+        <svg class="responsive-filter-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </BaseButton>
+
+      <div id="attendance-filter-panel" class="responsive-filter-panel" :class="{ 'is-open': isFilterExpanded }">
+        <div class="filter-grid">
         <label class="filter-field">
           <span>Nama Karyawan</span>
           <span class="select-control">
@@ -58,9 +78,10 @@
           </span>
         </label>
 
-        <div class="filter-inline-actions">
-          <BaseButton @click="applyFilters">Filter</BaseButton>
-          <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+          <div class="filter-inline-actions">
+            <BaseButton @click="applyFilters">Filter</BaseButton>
+            <BaseButton variant="outline" @click="resetFilters">Reset</BaseButton>
+          </div>
         </div>
       </div>
 
@@ -250,6 +271,7 @@ const draftFilters = reactive({
 })
 
 const activeFilters = reactive({ ...draftFilters })
+const isFilterExpanded = ref(false)
 const selectedDetail = ref(null)
 const isEditingDetail = ref(false)
 const editSubmitted = ref(false)
