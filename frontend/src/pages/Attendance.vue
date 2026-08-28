@@ -53,11 +53,7 @@
       <div class="table-heading">
         <div>
           <h2>Data Absensi</h2>
-          <div class="month-navigation">
-            <button type="button" class="month-nav-button" aria-label="Bulan sebelumnya" @click="changeMonth(-1)">‹</button>
-            <p>{{ activeMonthLabel }} {{ activeFilters.year }}</p>
-            <button type="button" class="month-nav-button" aria-label="Bulan berikutnya" @click="changeMonth(1)">›</button>
-          </div>
+          <p>{{ activeMonthLabel }} {{ activeFilters.year }}</p>
         </div>
         <span>{{ filteredEmployees.length }} karyawan</span>
       </div>
@@ -399,25 +395,6 @@ function closeDetail() {
   selectedDetail.value = null
   isEditingDetail.value = false
   editError.value = ''
-}
-
-function changeMonth(offset) {
-  let month = activeFilters.month + offset
-  let year = activeFilters.year
-
-  if (month < 1) {
-    month = 12
-    year -= 1
-  } else if (month > 12) {
-    month = 1
-    year += 1
-  }
-
-  activeFilters.month = month
-  activeFilters.year = year
-  draftFilters.month = month
-  draftFilters.year = year
-  closeDetail()
 }
 
 function exportToExcel() {
