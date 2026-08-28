@@ -560,8 +560,9 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import * as XLSX from 'xlsx'
+import { useRoute } from 'vue-router'
 import BaseButton from '../components/BaseButton.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -576,6 +577,7 @@ const jakartaNowParts = new Intl.DateTimeFormat('en-CA', {
 const nowPart = (type) => jakartaNowParts.find((part) => part.type === type)?.value || ''
 const currentDateIso = `${nowPart('year')}-${nowPart('month')}-${nowPart('day')}`
 const auth = useAuthStore()
+const route = useRoute()
 
 const employees = [
   { id: 'emp-001', name: 'Admin MediatrustPR', position: 'Administrator' },
@@ -1227,6 +1229,53 @@ function applyCustomRange() {
   isDateRangePickerOpen.value = false
   customRangeError.value = ''
 }
+
+function applyRouteFilters() {
+  const query = route.query || {}
+  const nextFilters = { ...draftFilters }
+  let hasRouteFilter = false
+
+  const employee = Array.isArray(query.employee) ? query.employee[0] : query.employee
+  const position = Array.isArray(query.position) ? query.position[0] : query.position
+  const status = Array.isArray(query.status) ? query.status[0] : query.status
+  const dateRange = Array.isArray(query.dateRange) ? query.dateRange[0] : query.dateRange
+  const customStart = Array.isArray(query.customStart) ? query.customStart[0] : query.customStart
+  const customEnd = Array.isArray(query.customEnd) ? query.customEnd[0] : query.customEnd
+
+  if (employee && employees.some((item) => item.id === employee)) {
+    nextFilters.employee = employee
+    hasRouteFilter = true
+  }
+
+  if (position && positions.includes(position)) {
+    nextFilters.position = position
+    hasRouteFilter = true
+  }
+
+  if (status && taskStatuses.includes(status)) {
+    nextFilters.status = status
+    hasRouteFilter = true
+  }
+
+  if (['all', 'yesterday', 'last7', 'last30'].includes(dateRange)) {
+    nextFilters.dateRange = dateRange
+    nextFilters.customStart = ''
+    nextFilters.customEnd = ''
+    hasRouteFilter = true
+  } else if (dateRange === 'custom' && customStart && customEnd) {
+    nextFilters.dateRange = 'custom'
+    nextFilters.customStart = customStart
+    nextFilters.customEnd = customEnd
+    hasRouteFilter = true
+  }
+
+  if (!hasRouteFilter) return
+  Object.assign(draftFilters, nextFilters)
+  Object.assign(activeFilters, nextFilters)
+  resetPagination()
+}
+
+onMounted(applyRouteFilters)
 
 function exportToExcel() {
   const rows = filteredTaskRows.value.map((row) => ({

@@ -8,7 +8,7 @@ import Positions from '../pages/Positions.vue'
 import Permissions from '../pages/Permissions.vue'
 import Clients from '../pages/Clients.vue'
 import Database from '../pages/Database.vue'
-import PlaceholderPage from '../pages/PlaceholderPage.vue'
+import Reports from '../pages/Reports.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -46,8 +46,7 @@ const router = createRouter({
         },
         {
           path: 'laporan',
-          component: PlaceholderPage,
-          props: { title: 'Laporan' },
+          component: Reports,
           meta: { title: 'Laporan' }
         },
         {
