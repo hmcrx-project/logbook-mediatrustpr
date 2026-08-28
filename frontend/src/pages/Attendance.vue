@@ -53,12 +53,16 @@
       <div class="table-heading">
         <div>
           <h2>Data Absensi</h2>
-          <p>{{ activeMonthLabel }} {{ activeFilters.year }}</p>
+          <div class="month-navigation">
+            <button type="button" class="month-nav-button" aria-label="Bulan sebelumnya" @click="changeMonth(-1)">‹</button>
+            <p>{{ activeMonthLabel }} {{ activeFilters.year }}</p>
+            <button type="button" class="month-nav-button" aria-label="Bulan berikutnya" @click="changeMonth(1)">›</button>
+          </div>
         </div>
         <span>{{ filteredEmployees.length }} karyawan</span>
       </div>
 
-      <div class="attendance-table-scroll" @wheel="handleTableWheel">
+      <div class="attendance-table-scroll">
         <table class="attendance-table">
           <thead>
             <tr>
@@ -397,20 +401,23 @@ function closeDetail() {
   editError.value = ''
 }
 
-function handleTableWheel(event) {
-  const container = event.currentTarget
-  if (!container || container.scrollWidth <= container.clientWidth) return
+function changeMonth(offset) {
+  let month = activeFilters.month + offset
+  let year = activeFilters.year
 
-  const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
-  if (!delta) return
-
-  const maxScrollLeft = container.scrollWidth - container.clientWidth
-  const nextScrollLeft = Math.min(maxScrollLeft, Math.max(0, container.scrollLeft + delta))
-
-  if (nextScrollLeft !== container.scrollLeft) {
-    event.preventDefault()
-    container.scrollLeft = nextScrollLeft
+  if (month < 1) {
+    month = 12
+    year -= 1
+  } else if (month > 12) {
+    month = 1
+    year += 1
   }
+
+  activeFilters.month = month
+  activeFilters.year = year
+  draftFilters.month = month
+  draftFilters.year = year
+  closeDetail()
 }
 
 function exportToExcel() {

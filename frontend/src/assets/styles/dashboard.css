@@ -223,14 +223,19 @@
   color: #12803B;
 }
 
-.status-badge.pending {
+.status-badge.hold {
   background: rgba(245, 137, 32, .12);
   color: #A95608;
 }
 
-.status-badge.open {
+.status-badge.progress {
   background: rgba(27, 152, 213, .1);
   color: #137DB0;
+}
+
+.status-badge.cancelled {
+  background: rgba(220, 53, 69, .09);
+  color: #B92D3A;
 }
 
 .employee-avatar {

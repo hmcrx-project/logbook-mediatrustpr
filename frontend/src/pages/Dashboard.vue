@@ -201,8 +201,8 @@ const summaryCards = [
 
 const recentTasks = [
   { title: 'Media monitoring harian', date: 'Hari ini', status: 'Selesai', statusClass: 'done' },
-  { title: 'Update database media', date: 'Hari ini', status: 'Pending', statusClass: 'pending' },
-  { title: 'Draft laporan campaign', date: 'Kemarin', status: 'On Progress', statusClass: 'open' },
+  { title: 'Update database media', date: 'Hari ini', status: 'Progres', statusClass: 'progress' },
+  { title: 'Draft laporan campaign', date: 'Kemarin', status: 'Ditunda', statusClass: 'hold' },
   { title: 'Koordinasi kebutuhan klien', date: 'Kemarin', status: 'Selesai', statusClass: 'done' },
   { title: 'Rekap publikasi mingguan', date: '2 hari lalu', status: 'Selesai', statusClass: 'done' }
 ]
