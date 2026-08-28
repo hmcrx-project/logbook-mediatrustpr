@@ -3,6 +3,7 @@ import Login from '../pages/Login.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import Attendance from '../pages/Attendance.vue'
 import Tasks from '../pages/Tasks.vue'
+import Employees from '../pages/Employees.vue'
 import PlaceholderPage from '../pages/PlaceholderPage.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
@@ -47,11 +48,7 @@ const router = createRouter({
         },
         {
           path: 'pengaturan/karyawan',
-          component: PlaceholderPage,
-          props: {
-            title: 'Karyawan',
-            description: 'Halaman master data karyawan akan dikembangkan pada tahap berikutnya.'
-          },
+          component: Employees,
           meta: { title: 'Karyawan' }
         },
         {
