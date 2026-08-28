@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../pages/Login.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import Attendance from '../pages/Attendance.vue'
 import PlaceholderPage from '../pages/PlaceholderPage.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { useAuthStore } from '../stores/auth'
@@ -29,8 +30,7 @@ const router = createRouter({
         },
         {
           path: 'absensi',
-          component: PlaceholderPage,
-          props: { title: 'Absensi' },
+          component: Attendance,
           meta: { title: 'Absensi' }
         },
         {
