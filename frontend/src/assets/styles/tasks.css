@@ -10,7 +10,7 @@
 
 .task-filter-grid {
   display: grid;
-  grid-template-columns: minmax(165px, 1.35fr) minmax(120px, .72fr) minmax(145px, 1fr) minmax(135px, .95fr) minmax(135px, .82fr) auto;
+  grid-template-columns: minmax(160px, 1.25fr) minmax(112px, .68fr) minmax(135px, .9fr) minmax(140px, .95fr) minmax(130px, .88fr) minmax(130px, .78fr) auto;
   gap: 14px;
 }
 
@@ -99,7 +99,7 @@
 
 .tasks-table {
   width: 100%;
-  min-width: 1160px;
+  min-width: 1320px;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--text);
@@ -138,6 +138,17 @@
 .task-name-cell {
   width: 250px;
   min-width: 250px;
+}
+
+.client-column,
+.client-cell {
+  width: 180px;
+  min-width: 180px;
+}
+
+.client-cell {
+  color: var(--text);
+  font-weight: 500;
 }
 
 .assignee-column,
@@ -860,7 +871,7 @@
   justify-content: flex-end;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .task-filter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

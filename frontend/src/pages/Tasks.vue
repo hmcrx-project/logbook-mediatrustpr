@@ -24,6 +24,16 @@
         </label>
 
         <label class="task-filter-field">
+          <span>Klien</span>
+          <select v-model="draftFilters.client" class="form-input">
+            <option value="all">Semua Klien</option>
+            <option v-for="client in clients" :key="client.id" :value="client.id">
+              {{ client.name }}
+            </option>
+          </select>
+        </label>
+
+        <label class="task-filter-field">
           <span>Nama Karyawan</span>
           <select v-model="draftFilters.employee" class="form-input">
             <option value="all">Semua Karyawan</option>
@@ -81,6 +91,7 @@
             <tr>
               <th>Tanggal</th>
               <th class="task-name-column">Nama Tugas</th>
+              <th class="client-column">Klien</th>
               <th>Mulai</th>
               <th>Selesai</th>
               <th>Status</th>
@@ -97,6 +108,7 @@
                   {{ row.name }}
                 </button>
               </td>
+              <td class="client-cell">{{ clientName(row.clientId) }}</td>
               <td>{{ row.start || '-' }}</td>
               <td>{{ row.end || '-' }}</td>
               <td>
@@ -114,7 +126,7 @@
               <td class="note-cell">{{ row.note || '-' }}</td>
             </tr>
             <tr v-if="filteredTaskRows.length === 0">
-              <td colspan="8" class="tasks-empty-state">Tidak ada data tugas sesuai filter.</td>
+              <td colspan="9" class="tasks-empty-state">Tidak ada data tugas sesuai filter.</td>
             </tr>
           </tbody>
         </table>
@@ -182,6 +194,10 @@
           <div class="task-detail-row">
             <span>Nama Tugas</span>
             <strong>{{ selectedTask.name }}</strong>
+          </div>
+          <div class="task-detail-row">
+            <span>Klien</span>
+            <strong>{{ clientName(selectedTask.clientId) }}</strong>
           </div>
           <div class="task-detail-row">
             <span>Status</span>
@@ -254,6 +270,15 @@
           <label class="task-form-field task-form-field-wide">
             <span>Nama Tugas</span>
             <input v-model.trim="taskForm.name" type="text" class="form-input" placeholder="Masukkan nama tugas" />
+          </label>
+
+          <label class="task-form-field">
+            <span>Klien</span>
+            <select v-model="taskForm.clientId" class="form-input">
+              <option v-for="client in clients" :key="client.id" :value="client.id">
+                {{ client.name }}
+              </option>
+            </select>
           </label>
 
           <label class="task-form-field">
@@ -440,6 +465,16 @@ const employees = [
   { id: 'emp-006', name: 'Dimas Saputra', position: 'Account Executive' }
 ]
 
+const clients = [
+  { id: 'client-internal', name: 'Internal / Tanpa Klien' },
+  { id: 'client-001', name: 'Nusantara Energi' },
+  { id: 'client-002', name: 'Bank Sentra' },
+  { id: 'client-003', name: 'Arunika Digital' },
+  { id: 'client-004', name: 'Cakrawala Consumer' }
+]
+
+const mockClientSequence = ['client-internal', 'client-001', 'client-002', 'client-003', 'client-004']
+
 const taskStatuses = ['Selesai', 'Progres', 'Ditunda', 'Dibatalkan']
 const positions = [...new Set(employees.map((employee) => employee.position))]
 const weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
@@ -465,9 +500,10 @@ const legacyTasks = [
   { id: 'task-018', date: '2026-08-12', name: 'Koordinasi agenda media visit', start: '09:20', end: '', status: 'Dibatalkan', employeeId: 'emp-006', deadline: '2026-08-13', note: 'Agenda dibatalkan dan akan dijadwalkan ulang.' }
 ]
 
-const tasks = ref(legacyTasks.map((task) => ({
+const tasks = ref(legacyTasks.map((task, index) => ({
   id: task.id,
   name: task.name,
+  clientId: mockClientSequence[index % mockClientSequence.length],
   status: task.status,
   employeeId: task.employeeId,
   deadline: task.deadline,
@@ -483,6 +519,7 @@ if (multiDayTask) {
 const draftFilters = reactive({
   search: '',
   status: 'all',
+  client: 'all',
   employee: 'all',
   position: 'all',
   dateRange: 'all',
@@ -500,6 +537,7 @@ const taskFormError = ref('')
 const taskDetailError = ref('')
 const taskForm = reactive({
   name: '',
+  clientId: 'client-internal',
   status: 'Progres',
   employeeId: '',
   deadline: currentDateIso,
@@ -529,6 +567,7 @@ const dateRangeLabels = {
 }
 
 const employeeMap = computed(() => new Map(employees.map((employee) => [employee.id, employee])))
+const clientMap = computed(() => new Map(clients.map((client) => [client.id, client])))
 const selectedTask = computed(() => tasks.value.find((task) => task.id === selectedTaskId.value) || null)
 const selectedTaskSessionsSorted = computed(() => {
   if (!selectedTask.value) return []
@@ -557,6 +596,7 @@ const taskRows = computed(() => tasks.value.flatMap((task) => task.sessions.map(
   start: session.start,
   end: session.end,
   name: task.name,
+  clientId: task.clientId,
   status: task.status,
   employeeId: task.employeeId,
   deadline: task.deadline,
@@ -576,13 +616,15 @@ const filteredTaskRows = computed(() => {
   return taskRows.value
     .filter((row) => {
       const employee = employeeMap.value.get(row.employeeId)
-      const searchableText = [row.name, row.note, employee?.name].filter(Boolean).join(' ').toLowerCase()
+      const client = clientMap.value.get(row.clientId)
+      const searchableText = [row.name, row.note, employee?.name, client?.name].filter(Boolean).join(' ').toLowerCase()
       const matchesSearch = !searchTerm || searchableText.includes(searchTerm)
       const matchesStatus = activeFilters.status === 'all' || row.status === activeFilters.status
+      const matchesClient = activeFilters.client === 'all' || row.clientId === activeFilters.client
       const matchesEmployee = activeFilters.employee === 'all' || row.employeeId === activeFilters.employee
       const matchesPosition = activeFilters.position === 'all' || employee?.position === activeFilters.position
       const matchesDate = matchesDateRange(row.date, activeFilters)
-      return matchesSearch && matchesStatus && matchesEmployee && matchesPosition && matchesDate
+      return matchesSearch && matchesStatus && matchesClient && matchesEmployee && matchesPosition && matchesDate
     })
     .sort((a, b) => taskRowTimestamp(b) - taskRowTimestamp(a))
 })
@@ -687,6 +729,10 @@ function employeeName(employeeId) {
   return employeeMap.value.get(employeeId)?.name || '-'
 }
 
+function clientName(clientId) {
+  return clientMap.value.get(clientId)?.name || 'Internal / Tanpa Klien'
+}
+
 function statusClass(status) {
   return {
     Selesai: 'done',
@@ -723,6 +769,7 @@ function resetFilters() {
   Object.assign(draftFilters, {
     search: '',
     status: 'all',
+    client: 'all',
     employee: 'all',
     position: 'all',
     dateRange: 'all',
@@ -762,6 +809,7 @@ function openAddTask() {
   taskModalMode.value = 'add'
   Object.assign(taskForm, {
     name: '',
+    clientId: 'client-internal',
     status: 'Progres',
     employeeId: '',
     deadline: currentDateIso,
@@ -777,6 +825,7 @@ function startEditTask() {
   if (!selectedTask.value) return
   Object.assign(taskForm, {
     name: selectedTask.value.name,
+    clientId: selectedTask.value.clientId,
     status: selectedTask.value.status,
     employeeId: selectedTask.value.employeeId,
     deadline: selectedTask.value.deadline,
@@ -823,8 +872,8 @@ function validateSessions(sessions) {
 }
 
 function validateTaskForm() {
-  if (!taskForm.name || !taskForm.status || !taskForm.employeeId || !taskForm.deadline) {
-    return 'Nama tugas, status, karyawan, dan deadline wajib diisi.'
+  if (!taskForm.name || !taskForm.clientId || !taskForm.status || !taskForm.employeeId || !taskForm.deadline) {
+    return 'Nama tugas, klien, status, karyawan, dan deadline wajib diisi.'
   }
   return validateSessions(taskForm.sessions)
 }
@@ -850,6 +899,7 @@ function saveTask() {
     tasks.value.push({
       id: taskId,
       name: taskForm.name,
+      clientId: taskForm.clientId,
       status: taskForm.status,
       employeeId: taskForm.employeeId,
       deadline: taskForm.deadline,
@@ -867,6 +917,7 @@ function saveTask() {
     tasks.value[index] = {
       ...tasks.value[index],
       name: taskForm.name,
+      clientId: taskForm.clientId,
       status: taskForm.status,
       employeeId: taskForm.employeeId,
       deadline: taskForm.deadline,
@@ -1059,6 +1110,7 @@ function exportToExcel() {
   const rows = filteredTaskRows.value.map((row) => ({
     Tanggal: formatDate(row.date),
     'Nama Tugas': row.name,
+    Klien: clientName(row.clientId),
     Mulai: row.start || '-',
     Selesai: row.end || '-',
     Status: row.status,
@@ -1068,11 +1120,11 @@ function exportToExcel() {
   }))
 
   const worksheet = XLSX.utils.json_to_sheet(rows, {
-    header: ['Tanggal', 'Nama Tugas', 'Mulai', 'Selesai', 'Status', 'Dikerjakan', 'Deadline', 'Catatan']
+    header: ['Tanggal', 'Nama Tugas', 'Klien', 'Mulai', 'Selesai', 'Status', 'Dikerjakan', 'Deadline', 'Catatan']
   })
 
   worksheet['!cols'] = [
-    { wch: 13 }, { wch: 34 }, { wch: 10 }, { wch: 10 },
+    { wch: 13 }, { wch: 34 }, { wch: 24 }, { wch: 10 }, { wch: 10 },
     { wch: 14 }, { wch: 24 }, { wch: 13 }, { wch: 42 }
   ]
 
